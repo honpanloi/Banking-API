@@ -2,7 +2,7 @@ package com.app.model;
 
 public class Customer {
 	
-	private int id;
+	private long id;
 	private String first_name;
 	private String last_name;
 	private String salutation;
@@ -21,10 +21,10 @@ public class Customer {
 	private int credit_score;
 	
 	
-	public int getId() {
+	public long getId() {
 		return id;
 	}
-	public void setId(int id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 	public String getFirst_name() {

@@ -4,11 +4,11 @@ import java.util.List;
 
 import com.app.exception.BusinessException;
 import com.app.model.Account;
-import com.app.service.AccountCRUDService;
+import com.app.service.AccountCrudService;
 
-public class AccountCRUDServiceImpl implements AccountCRUDService {
+public class AccountCrudServiceImpl implements AccountCrudService {
 	
-	private AccountCRUDService accountCRUDServiceImpl = new AccountCRUDServiceImpl();
+	private AccountCrudService accountCRUDServiceImpl = new AccountCrudServiceImpl();
 
 	@Override
 	public int creatAccountByCustomer(Account account, Double initialDeposit) throws BusinessException {

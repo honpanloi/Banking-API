@@ -5,7 +5,7 @@ import java.util.List;
 import com.app.exception.BusinessException;
 import com.app.model.Account;
 
-public interface AccountCRUDService {
+public interface AccountCrudService {
 	
 	public int creatAccountByCustomer(Account account, Double initialDeposit) throws BusinessException;
 	public int creatAccountByEmployee(Account account, Double initialDeposit) throws BusinessException;

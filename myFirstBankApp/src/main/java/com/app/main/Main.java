@@ -4,8 +4,11 @@ import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 
+import com.app.exception.BusinessException;
 import com.app.model.AccountType;
 import com.app.model.Customer;
+import com.app.service.CustomerCrudService;
+import com.app.service.impl.CustomerCrudServiceImpl;
 
 public class Main {
 	
@@ -77,37 +80,49 @@ public class Main {
 			
 			case 1:
 				
+				CustomerCrudService customerCRUDService = new CustomerCrudServiceImpl();
+				
 				log.info("Please enter your user name");
 				
-				String userName = "";
-				String password = "";
+				String userNameEntered = "";
+				String passwordEntered = "";
 				
-				userName = sc.nextLine();
+				customer = new Customer();
 				
-				//to be replaced by getUserNameDAOImpl();####################
-				if(userName.equals("1")) {
+				userNameEntered = sc.nextLine();
+				try {
+					customer = customerCRUDService.getCustomerByLoginUserName(userNameEntered);
+				} catch (BusinessException e) {
+						log.info(e.getMessage());
+				}
+				
+				if(userNameEntered.equals(customer.getLogin_user_name())) {
+					
 					
 					
 					log.info("Please enter your password");
 					
 					
-					password = sc.nextLine();
+					passwordEntered = sc.nextLine();
+					try {
+						customer = customerCRUDService.getCustomerByPasswordAfterByLoginUserName(customer, passwordEntered);
+					} catch (BusinessException e) {
+						log.info(e.getMessage());
+					}
+				
 					
-					if(password.equals("1")) {
+					if(passwordEntered.equals(customer.getLogin_password())) {
 						spaceOutTheOldMessages();
 						log.info("Login Successful");
 						
-						//to be replaced by get customerById###################
-						customer = new Customer();
-						//customer.setBasic_checking_acc_id(23456);
-						
 						CustomerMainMenu(sc,customer);
+						
 					}else {
 						log.info("The password you entered is incorrect. Please try again.");
 					}
 					
 				}else {
-					log.info("User name: "+userName+" is not found. Please try again");
+					log.info("User name: "+userNameEntered+" is not found. Please try again");
 				}
 				
 				
@@ -128,8 +143,7 @@ public class Main {
 	}
 
 	private static void CustomerMainMenu(Scanner sc, Customer customer) {
-		
-		//Hello! customer.name how can I help you today?#######
+		log.info("Hello! "+customer.getFirst_name()+". How can I help you today");
 		log.info("-----Main Menu----");
 		
 		int chcmm = 0;
