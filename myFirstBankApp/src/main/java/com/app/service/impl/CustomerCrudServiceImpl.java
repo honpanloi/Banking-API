@@ -27,15 +27,45 @@ public class CustomerCrudServiceImpl implements CustomerCrudService {
 	}
 
 	@Override
-	public Customer getCustomerByPasswordAfterByLoginUserName(Customer customer, String password) throws BusinessException {
-		
+	public Customer getCustomerByIdAndPassword(long id, String password) throws BusinessException {
+		Customer customer = null;
 		if(password.length()>1) {
-			customer = customerCrudDAOdao.getCustomerByPasswordAfterByLoginUserName(customer, password);
+			customer = customerCrudDAOdao.getCustomerByIdAndPassword(id, password);
 		}else {
 			throw new BusinessException("Entered password is invalid. Please try again");
 		}
 		return customer;
 			
+	}
+
+	@Override
+	public Customer getCustomerById(long id) throws BusinessException {
+		Customer customer = null;
+		if(id>=10000) {
+			customerCrudDAOdao.getCustomerById(id);
+		}
+		return customer;
+	}
+
+	@Override
+	public boolean isLoginUserNameTaken(String userName) throws BusinessException {
+		boolean isTaken = true;
+			isTaken = customerCrudDAOdao.isLoginUserNameTaken(userName);
+		return isTaken;
+	}
+
+	@Override
+	public boolean isSsnTaken(int ssn) throws BusinessException {
+		boolean isTaken = true;
+			isTaken = customerCrudDAOdao.isSsnTaken(ssn);
+		return isTaken;
+	}
+
+	@Override
+	public int creatNewCustomer(Customer customer) throws BusinessException {
+		int c = 0;
+		c = customerCrudDAOdao.creatNewCustomer(customer);
+		return c;
 	}
 
 }

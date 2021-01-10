@@ -1,13 +1,15 @@
 package com.app.model;
 
+import java.sql.Date;
+
 public class Customer {
 	
 	private long id;
 	private String first_name;
 	private String last_name;
 	private String salutation;
-	private String ssn;
-	private String dob;
+	private int ssn;
+	private Date dob;
 	private String address;
 	private long phone1;
 	private long phone2;
@@ -45,16 +47,16 @@ public class Customer {
 	public void setSalutation(String salutation) {
 		this.salutation = salutation;
 	}
-	public String getSsn() {
+	public int getSsn() {
 		return ssn;
 	}
-	public void setSsn(String ssn) {
+	public void setSsn(int ssn) {
 		this.ssn = ssn;
 	}
-	public String getDob() {
+	public Date getDob() {
 		return dob;
 	}
-	public void setDob(String dob) {
+	public void setDob(Date dob) {
 		this.dob = dob;
 	}
 	public String getAddress() {
@@ -129,7 +131,7 @@ public class Customer {
 		
 	}
 	
-	public Customer(int id, String first_name, String last_name, String salutation, String ssn, String dob,
+	public Customer(int id, String first_name, String last_name, String salutation, int ssn, Date dob,
 			String address, long phone1, long phone2, String email, String login_user_name, String login_password,
 			int credit_score) {
 		super();
