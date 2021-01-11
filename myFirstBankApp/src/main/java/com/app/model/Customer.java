@@ -21,6 +21,7 @@ public class Customer {
 	private String login_user_name;
 	private String login_password;
 	private int credit_score;
+	private long register_by_employee;
 	
 	
 	public long getId() {
@@ -125,7 +126,12 @@ public class Customer {
 	public void setCredit_score(int credit_score) {
 		this.credit_score = credit_score;
 	}
-	
+	public long getRegister_by_employee() {
+		return register_by_employee;
+	}
+	public void setRegister_by_employee(long register_by_employee) {
+		this.register_by_employee = register_by_employee;
+	}
 	
 	public Customer() {
 		
@@ -149,6 +155,7 @@ public class Customer {
 		this.login_password = login_password;
 		this.credit_score = credit_score;
 	}
+	
 	@Override
 	public String toString() {
 		return "Customer [id=" + id + ", first_name=" + first_name + ", last_name=" + last_name + ", salutation="

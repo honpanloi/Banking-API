@@ -10,6 +10,7 @@ import com.app.dao.CustomerCrudDAO;
 import com.app.dao.dbutil.PostgresqlConnection;
 import com.app.exception.BusinessException;
 import com.app.model.Customer;
+import com.app.model.Employee;
 
 public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 
@@ -168,7 +169,7 @@ public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 	}
 
 	@Override
-	public int creatNewCustomer(Customer customer) throws BusinessException {
+	public int creatNewCustomerByCustomer(Customer customer) throws BusinessException {
 		
 		int c =0;
 		try(Connection connection = PostgresqlConnection.getConnection()){
@@ -186,6 +187,32 @@ public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 			preparedStatement.setString(10, customer.getLogin_password());
 			preparedStatement.setInt(11, customer.getCredit_score());
 			preparedStatement.setInt(12, customer.getSsn());
+			
+			c = preparedStatement.executeUpdate();
+			
+		} catch (ClassNotFoundException | SQLException e) {
+			throw new BusinessException("Registration failed. Internal error occured contact sysadmin");
+		}
+		return c;
+	}
+
+	@Override
+	public int creatNewCustomerByEmployee(Employee employee, Customer customer) throws BusinessException {
+		int c =0;
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			String sql = "insert into my_bank_app.customer(salutation,dob,address,phone1,phone2,email,login_user_name,login_password,credit_score,ssn) values (?,?,?,?,?,?,?,?,?,?)";
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			
+			preparedStatement.setString(1, customer.getSalutation());
+			preparedStatement.setDate(2, customer.getDob());
+			preparedStatement.setString(3, customer.getAddress());
+			preparedStatement.setLong(4, customer.getPhone1());
+			preparedStatement.setLong(5, customer.getPhone2());
+			preparedStatement.setString(6, customer.getEmail());
+			preparedStatement.setString(7, customer.getLogin_user_name());
+			preparedStatement.setString(8, customer.getLogin_password());
+			preparedStatement.setInt(9, customer.getCredit_score());
+			preparedStatement.setInt(10, customer.getSsn());
 			
 			c = preparedStatement.executeUpdate();
 			

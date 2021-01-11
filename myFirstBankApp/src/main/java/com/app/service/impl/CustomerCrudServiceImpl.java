@@ -5,6 +5,7 @@ import com.app.dao.CustomerCrudDAO;
 import com.app.dao.Impl.CustomerCrudDAOImpl;
 import com.app.exception.BusinessException;
 import com.app.model.Customer;
+import com.app.model.Employee;
 import com.app.service.CustomerCrudService;
 
 public class CustomerCrudServiceImpl implements CustomerCrudService {
@@ -62,9 +63,16 @@ public class CustomerCrudServiceImpl implements CustomerCrudService {
 	}
 
 	@Override
-	public int creatNewCustomer(Customer customer) throws BusinessException {
+	public int creatNewCustomerByCustomer(Customer customer) throws BusinessException {
 		int c = 0;
-		c = customerCrudDAOdao.creatNewCustomer(customer);
+		c = customerCrudDAOdao.creatNewCustomerByCustomer(customer);
+		return c;
+	}
+
+	@Override
+	public int creatNewCustomerByEmployee(Employee employee, Customer customer) throws BusinessException {
+		int c = 0;
+		c = customerCrudDAOdao.creatNewCustomerByEmployee(employee,customer);
 		return c;
 	}
 
