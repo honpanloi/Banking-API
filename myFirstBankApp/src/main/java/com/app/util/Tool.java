@@ -11,12 +11,18 @@ public class Tool {
 	
 	private static Logger log = Logger.getLogger(Main.class);
 	
-	public static String getCurrentDate() {
+	public static String getPrintedCurrentDate() {
 		String timeNow = null;
 		Date currentDate = new Date();
 		SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MMM-dd EEEE z Z HH:mm:ss");
 		timeNow = format1.format(currentDate).toString();
 		return timeNow;
+	}
+	
+	public static Date getCurrentDate() {
+
+		Date currentDate = new Date();
+		return currentDate;
 	}
 	
 	public static void get2SecondProcessingTime() {

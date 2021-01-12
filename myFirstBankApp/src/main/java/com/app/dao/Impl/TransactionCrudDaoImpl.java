@@ -30,7 +30,7 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 			preparedStatement.setString(1, "atm_deposite");
 			preparedStatement.setString(2, "pending");
 			//create and store the currentDate as a reference to find the created transaction
-			String currentDate = Tool.getCurrentDate();
+			String currentDate = Tool.getPrintedCurrentDate();
 			preparedStatement.setString(3, currentDate);
 			
 			preparedStatement.setDouble(4, accountNumber);
@@ -84,7 +84,7 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 			//mark which account it deposited into
 			String sql5 = "update my_bank_app.\"transaction\" set \"status\" = 'completed', time_completed = ?, deposit_to = ?, balance_after_deposit = ? where trans_number = ?";
 			PreparedStatement preparedStatement5 = connection.prepareStatement(sql5);
-			preparedStatement5.setString(1, Tool.getCurrentDate());
+			preparedStatement5.setString(1, Tool.getPrintedCurrentDate());
 			preparedStatement5.setLong(2, accountNumber);
 			preparedStatement5.setDouble(3, projectedBalance);
 			preparedStatement5.setLong(4, transactionNum);
@@ -142,7 +142,7 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 			preparedStatement.setString(1, "atm_withdraw");
 			preparedStatement.setString(2, "pending");
 			//create and store the currentDate as a reference to find the created transaction
-			String currentDate = Tool.getCurrentDate();
+			String currentDate = Tool.getPrintedCurrentDate();
 			preparedStatement.setString(3, currentDate);
 			
 			preparedStatement.setDouble(4, accountNumber);
@@ -215,7 +215,7 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 			//mark which account it deposited into
 			String sql5 = "update my_bank_app.\"transaction\" set \"status\" = 'completed', time_completed = ?, withdraw_from = ?, balance_after_withdraw = ? where trans_number = ?";
 			PreparedStatement preparedStatement5 = connection.prepareStatement(sql5);
-			preparedStatement5.setString(1, Tool.getCurrentDate());
+			preparedStatement5.setString(1, Tool.getPrintedCurrentDate());
 			preparedStatement5.setLong(2, accountNumber);
 			preparedStatement5.setDouble(3, projectedBalance);
 			preparedStatement5.setLong(4, transactionNum);

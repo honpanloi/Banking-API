@@ -18,7 +18,7 @@ public class CustomerCrudServiceImpl implements CustomerCrudService {
 		
 		Customer customer = null;
 		//to be replaced by a user name validation
-		if(login_user_name.length()>1) {
+		if(login_user_name.length()>=6) {
 			customer = customerCrudDAOdao.getCustomerByLoginUserName(login_user_name);
 		}else {
 			throw new BusinessException("Entered user name is invalid. Please try again");

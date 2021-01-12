@@ -1,10 +1,12 @@
 package com.app.main;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
 import org.apache.log4j.Logger;
 import com.app.exception.BusinessException;
 import com.app.model.Account;
@@ -20,6 +22,8 @@ import com.app.service.impl.AccountTypeReadServiceImpl;
 import com.app.service.impl.CustomerCrudServiceImpl;
 import com.app.service.impl.TransactionCrudServiceImpl;
 import com.app.util.Validation;
+
+import java.sql.Date;
 import java.text.DecimalFormat;
 
 public class Main {
@@ -91,7 +95,8 @@ public class Main {
 			
 			switch (chclm) {
 			
-			case 1:		loginCustomer(sc);
+			case 1:		
+				loginCustomer(sc);
 				break;
 			case 2:
 				customer = new Customer();
@@ -120,7 +125,11 @@ public class Main {
 		
 		customer = new Customer();
 		
-		userNameEntered = sc.nextLine();
+		try {
+			userNameEntered = sc.nextLine();
+		} catch (Exception e1) {
+			log.info("Please enter your user name to login.");
+		}
 		try {
 			customer = customerCRUDService.getCustomerByLoginUserName(userNameEntered);
 		} catch (BusinessException e) {
@@ -155,7 +164,10 @@ public class Main {
 			}
 			
 		}else {
-			log.info("User name: "+userNameEntered+" is not found. Please try again");
+			if(userNameEntered!=null && Validation.isValidUserName(userNameEntered)) {
+				log.info("User name: "+userNameEntered+" is not found. Please try again");
+			}
+			
 		}
 	}
 
@@ -186,11 +198,9 @@ public class Main {
 			case 3:		atmDepositMenu(sc, customer);
 				break;
 			case 4:		atmWithdrawMenu(sc, customer);
-				
-
 				break;
 			case 5:
-
+				
 				break;
 			case 6:
 
@@ -289,6 +299,79 @@ public class Main {
 			do {
 				accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
 				log.info("Which account do you want to withdraw from?");
+				int index = 1;
+				
+				accountsBelongToCustomer = sortAccountsByType(accountsBelongToCustomer);
+				
+				for (Account a: accountsBelongToCustomer) {
+					log.info(index+")	"+a.getPrintedAccountType()+"("+a.getPrintedAccountStatus() +")\n	Current balance: $"+df2.format(a.getCurrent_balance()));
+					index++;
+				}
+				log.info("Enter \"cancel\" to go to main menu");
+				
+
+				try {
+					ch = sc.nextLine();
+				} catch (Exception e2) {
+					log.info("Invalid input. Please try again.");
+
+				} 
+				
+				long targetAccountNumber = 0;
+				targetAccountNumber = acquireTargetAccountNumber(accountsBelongToCustomer, ch, targetAccountNumber);
+				
+				if(targetAccountNumber!=0) {
+					AccountCrudService accountCrudService = new AccountCrudServiceImpl();
+					boolean isAccountActive = false;
+					try {
+						isAccountActive = accountCrudService.checkIfanAccountIsActive(targetAccountNumber);
+					} catch (BusinessException e1) {
+						log.info(e1.getMessage());
+					}
+					
+					if(ch!=null && !ch.equals("cancel") && !isAccountActive) {
+						log.info("This account is not active. Please contact customer service or visit a local Mybank.");
+					}
+					
+					if(isAccountActive && targetAccountNumber != 0) {
+						double withdrawAmount = 0;
+						boolean isValidInput = false;
+						try {
+							log.info("How much do you want to withdraw?");
+							withdrawAmount = Double.parseDouble(sc.nextLine());
+							isValidInput = true;
+						} catch (NumberFormatException e) {
+							log.info("Invalid input");
+						}
+						if(isValidInput) {
+							
+							try {
+								transactionCrudService.createWithdrawOnlyTransaction(targetAccountNumber, withdrawAmount);
+							} catch (BusinessException e) {
+								log.info(e.getMessage());
+							}
+						}
+						
+					}
+				
+				}
+			} while (!ch.equals("cancel"));
+			log.info("Going back to main menu.");
+			spaceOutTheOldMessages();
+		}else {
+			log.info("You don't have an account yet. You can apply for one using this app. Thank you!");
+		}
+	}
+
+	private static void makeATransfer(Scanner sc, Customer customer) {
+		TransactionCrudService transactionCrudService = new TransactionCrudServiceImpl();
+		List<Account> accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
+		String ch = "";
+		
+		if(accountsBelongToCustomer!=null && accountsBelongToCustomer.size()>0) {
+			do {
+				accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
+				log.info("Which account do you want to transfer from?");
 				int index = 1;
 				
 				accountsBelongToCustomer = sortAccountsByType(accountsBelongToCustomer);
@@ -785,10 +868,9 @@ public class Main {
 			ch = acquireUserInput(sc, ch);
 			switch (ch) {
 			case 1:
+				//currently working on...
 				
-				
-			
-				
+				//finished
 				acquireUserName(customer, sc, customerCRUDService);
 				acquirePassword(customer, sc);
 				acquireSsn(customer, sc, customerCRUDService, false);
@@ -907,16 +989,20 @@ public class Main {
 			}
 			
 			if(Validation.isValidDob(dobEntered)) {
-				SimpleDateFormat dobsdf = new SimpleDateFormat("yyyy-MM-dd");
-				java.util.Date dobUtil = null;
-				try {
-					dobUtil = dobsdf.parse(dobEntered);
-				} catch (ParseException e) {
+				
+				LocalDate dobEnteredLd = LocalDate.parse(dobEntered, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+				if(dobEnteredLd.compareTo(LocalDate.now().minusYears(12))<=0) {
+					java.sql.Date dobsql = Date.valueOf(dobEnteredLd);
 					
+					log.info("Date of birth entered is accepted.");
+					customer.setDob(dobsql);
+				}else {
+					log.info("I'm sorry. A Mybank customer has to be 12 years old or older to register an account.");
+					log.info("Date of birth entered is unaccepted.");
+					dobEntered = null;
 				}
-				java.sql.Date dobsql = new java.sql.Date(dobUtil.getTime());
-				log.info("Date of birth entered is accepted.");
-				customer.setDob(dobsql);
+				
 				
 			}else {
 				log.info("Date of birth entered is unaccepted.");

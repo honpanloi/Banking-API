@@ -36,7 +36,7 @@ public class AccountCrudDAOImpl implements AccountCrudDAO {
 			preparedStatement.setLong(1, customer.getId());
 			preparedStatement.setString(2, account.getAccount_type());
 			preparedStatement.setDouble(3, initialDeposit);
-			preparedStatement.setString(4, Tool.getCurrentDate());
+			preparedStatement.setString(4, Tool.getPrintedCurrentDate());
 			
 			c += preparedStatement.executeUpdate();
 			
