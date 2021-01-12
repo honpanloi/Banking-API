@@ -78,7 +78,7 @@ public class AccountCrudServiceImpl implements AccountCrudService {
 //		if(depositAmount>0.01d) {
 //			accountCrudDAO.depositToAnAccountByCustomerAndAccountNumber(customer, accountNumber, depositAmount);
 //		}else {
-//			throw new BusinessException("You have to deposit $0.01 or more to make it a valid deposit.");
+//			throw new BusinessException("");
 //		}
 //		return c;
 //	}

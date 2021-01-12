@@ -184,9 +184,9 @@ public class Main {
 			case 2:		viewAccountsBelongToTheCustomer(customer);
 				break;
 			case 3:		atmDepositMenu(sc, customer);
-	
 				break;
-			case 4:
+			case 4:		atmWithdrawMenu(sc, customer);
+				
 
 				break;
 			case 5:
@@ -226,51 +226,51 @@ public class Main {
 				}
 				log.info("Enter \"cancel\" to go to main menu");
 				
-				
-				
-				long targetAccountNumber = 0;
+
 				try {
 					ch = sc.nextLine();
 				} catch (Exception e2) {
-					log.info("Invalid input");
-				}
+					log.info("Invalid input. Please try again.");
+
+				} 
 				
-				
-				
+				long targetAccountNumber = 0;
 				targetAccountNumber = acquireTargetAccountNumber(accountsBelongToCustomer, ch, targetAccountNumber);
 				
-				AccountCrudService accountCrudService = new AccountCrudServiceImpl();
-				boolean isAccountActive = false;
-				try {
-					isAccountActive = accountCrudService.checkIfanAccountIsActive(targetAccountNumber);
-				} catch (BusinessException e1) {
-					log.info(e1.getMessage());
-				}
-				
-				if(ch!=null && !ch.equals("cancel") && !isAccountActive) {
-					log.info("This account is not active. Please contact customer service or visit a local Mybank.");
-					return;
-				}
-				
-				if(targetAccountNumber != 0) {
-					double depositAmount = 0;
-					boolean isValidInput = false;
+				if(targetAccountNumber!=0) {
+					AccountCrudService accountCrudService = new AccountCrudServiceImpl();
+					boolean isAccountActive = false;
 					try {
-						log.info("How much do you want to deposite?");
-						depositAmount = Double.parseDouble(sc.nextLine());
-						isValidInput = true;
-					} catch (NumberFormatException e) {
-						log.info("Invalid input");
-					}
-					if(isValidInput) {
-						try {
-							transactionCrudService.createDepositOnlyTransaction(targetAccountNumber, depositAmount);
-						} catch (BusinessException e) {
-							log.info(e.getMessage());
-						}
+						isAccountActive = accountCrudService.checkIfanAccountIsActive(targetAccountNumber);
+					} catch (BusinessException e1) {
+						log.info(e1.getMessage());
 					}
 					
-					ch = "cancel";
+					if(ch!=null && !ch.equals("cancel") && !isAccountActive) {
+						log.info("This account is not active. Please contact customer service or visit a local Mybank.");
+						
+					}
+					
+					if(isAccountActive && targetAccountNumber != 0) {
+						double depositAmount = 0;
+						boolean isValidInput = false;
+						try {
+							log.info("How much do you want to deposite?");
+							depositAmount = Double.parseDouble(sc.nextLine());
+							isValidInput = true;
+						} catch (NumberFormatException e) {
+							log.info("Invalid input");
+						}
+						if(isValidInput) {
+							try {
+								transactionCrudService.createDepositOnlyTransaction(targetAccountNumber, depositAmount);
+							} catch (BusinessException e) {
+								log.info(e.getMessage());
+							}
+						}
+						
+					}
+				
 				}
 			} while (!ch.equals("cancel"));
 			log.info("Going back to main menu.");
@@ -280,6 +280,79 @@ public class Main {
 		}
 	}
 
+	private static void atmWithdrawMenu(Scanner sc, Customer customer) {
+		TransactionCrudService transactionCrudService = new TransactionCrudServiceImpl();
+		List<Account> accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
+		String ch = "";
+		
+		if(accountsBelongToCustomer!=null && accountsBelongToCustomer.size()>0) {
+			do {
+				accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
+				log.info("Which account do you want to withdraw from?");
+				int index = 1;
+				
+				accountsBelongToCustomer = sortAccountsByType(accountsBelongToCustomer);
+				
+				for (Account a: accountsBelongToCustomer) {
+					log.info(index+")	"+a.getPrintedAccountType()+"("+a.getPrintedAccountStatus() +")\n	Current balance: $"+df2.format(a.getCurrent_balance()));
+					index++;
+				}
+				log.info("Enter \"cancel\" to go to main menu");
+				
+
+				try {
+					ch = sc.nextLine();
+				} catch (Exception e2) {
+					log.info("Invalid input. Please try again.");
+
+				} 
+				
+				long targetAccountNumber = 0;
+				targetAccountNumber = acquireTargetAccountNumber(accountsBelongToCustomer, ch, targetAccountNumber);
+				
+				if(targetAccountNumber!=0) {
+					AccountCrudService accountCrudService = new AccountCrudServiceImpl();
+					boolean isAccountActive = false;
+					try {
+						isAccountActive = accountCrudService.checkIfanAccountIsActive(targetAccountNumber);
+					} catch (BusinessException e1) {
+						log.info(e1.getMessage());
+					}
+					
+					if(ch!=null && !ch.equals("cancel") && !isAccountActive) {
+						log.info("This account is not active. Please contact customer service or visit a local Mybank.");
+					}
+					
+					if(isAccountActive && targetAccountNumber != 0) {
+						double withdrawAmount = 0;
+						boolean isValidInput = false;
+						try {
+							log.info("How much do you want to withdraw?");
+							withdrawAmount = Double.parseDouble(sc.nextLine());
+							isValidInput = true;
+						} catch (NumberFormatException e) {
+							log.info("Invalid input");
+						}
+						if(isValidInput) {
+							
+							try {
+								transactionCrudService.createWithdrawOnlyTransaction(targetAccountNumber, withdrawAmount);
+							} catch (BusinessException e) {
+								log.info(e.getMessage());
+							}
+						}
+						
+					}
+				
+				}
+			} while (!ch.equals("cancel"));
+			log.info("Going back to main menu.");
+			spaceOutTheOldMessages();
+		}else {
+			log.info("You don't have an account yet. You can apply for one using this app. Thank you!");
+		}
+	}
+	
 	private static List<Account> sortAccountsByType(List<Account> accountsBelongToCustomer) {
 		List<Account> sortedAccountsBelongToCustomerAccounts = new ArrayList<Account>();
 		
