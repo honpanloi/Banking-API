@@ -83,5 +83,59 @@ public class Account {
 				+ rejected_by + ", current_balance=" + current_balance + "]";
 	}
 	
+	public String getAccountBalance() {
+		String result = null;
+		result =	"Account Number: " + number +"\n"+
+					"Account type: "+ account_type+"\n"+
+					"Current Balance: $"+ current_balance;
+		return result;
+	}
+	
+	public String getPrintedAccountType() {
+		String result = null;
+		switch (account_type) {
+		case "basic_checking":
+			result = "Basic Checking";
+			break;
+		case "basic_saving":
+			result = "Basic Saving";
+			break;
+		case "prem_checking":
+			result = "Premium Checking";
+			break;
+		case "prem_saving":
+			result = "Premium Saving";
+			break;
+
+		default:
+			break;
+		}
+		return result;
+	}
+	
+	public String getPrintedAccountStatus() {
+		String result = null;
+		switch (status) {
+		case "active":
+			result = "Active";
+			break;
+		case "closed":
+			result = "Closed";
+			break;
+		case "frozen":
+			result = "Frozen";
+			break;
+		case "not_yet_approved":
+			result = "Waiting for Approval";
+			break;
+		case "rejected":
+			result = "Rejected";
+			break;
+
+		default:
+			break;
+		}
+		return result;
+	}
 	
 }

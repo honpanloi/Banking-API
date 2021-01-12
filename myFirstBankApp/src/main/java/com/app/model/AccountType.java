@@ -91,6 +91,26 @@ public class AccountType {
 				;
 	}
 	
-	
+	public String getPrintedAccountType() {
+		String result = null;
+		switch (type) {
+		case "basic_checking":
+			result = "Basic Checking";
+			break;
+		case "basic_saving":
+			result = "Basic Saving";
+			break;
+		case "prem_checking":
+			result = "Premium Checking";
+			break;
+		case "prem_saving":
+			result = "Premium Saving";
+			break;
+
+		default:
+			break;
+		}
+		return result;
+	}
 
 }

@@ -2,6 +2,8 @@ package com.app.main;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import org.apache.log4j.Logger;
 import com.app.exception.BusinessException;
@@ -12,14 +14,17 @@ import com.app.model.Employee;
 import com.app.service.AccountCrudService;
 import com.app.service.AccountTypeReadService;
 import com.app.service.CustomerCrudService;
+import com.app.service.TransactionCrudService;
 import com.app.service.impl.AccountCrudServiceImpl;
 import com.app.service.impl.AccountTypeReadServiceImpl;
 import com.app.service.impl.CustomerCrudServiceImpl;
+import com.app.service.impl.TransactionCrudServiceImpl;
 import com.app.util.Validation;
+import java.text.DecimalFormat;
 
 public class Main {
 	
-	
+	private static DecimalFormat df2 = new DecimalFormat("#.##");
 	private static Logger log = Logger.getLogger(Main.class);
 	
 	public static void main(String[] args) {
@@ -86,56 +91,7 @@ public class Main {
 			
 			switch (chclm) {
 			
-			case 1:
-				
-				CustomerCrudService customerCRUDService = new CustomerCrudServiceImpl();
-				
-				log.info("Please enter your user name");
-				
-				String userNameEntered = "";
-				String passwordEntered = "";
-				
-				customer = new Customer();
-				
-				userNameEntered = sc.nextLine();
-				try {
-					customer = customerCRUDService.getCustomerByLoginUserName(userNameEntered);
-				} catch (BusinessException e) {
-						log.info(e.getMessage());
-						customer = new Customer();
-				}
-				
-				if(customer.getLogin_user_name()!=null) {
-					
-					
-					
-					log.info("Please enter your password");
-					
-					
-					passwordEntered = sc.nextLine();
-					try {
-						customer = customerCRUDService.getCustomerByIdAndPassword(customer.getId(), passwordEntered);
-					} catch (BusinessException e) {
-						log.info(e.getMessage());
-						customer = new Customer();
-					}
-				
-					
-					if(customer.getFirst_name()!=null) {
-						spaceOutTheOldMessages();
-						log.info("Login Successful");
-						
-						CustomerMainMenu(sc,customer,customerCRUDService);
-						
-					}else {
-						log.info("The password you entered is incorrect. Please try again.");
-					}
-					
-				}else {
-					log.info("User name: "+userNameEntered+" is not found. Please try again");
-				}
-				
-				
+			case 1:		loginCustomer(sc);
 				break;
 			case 2:
 				customer = new Customer();
@@ -153,7 +109,57 @@ public class Main {
 		
 	}
 
-	private static void CustomerMainMenu(Scanner sc, Customer customer, CustomerCrudService crudServiceImpl) {
+	private static void loginCustomer(Scanner sc) {
+		Customer customer;
+		CustomerCrudService customerCRUDService = new CustomerCrudServiceImpl();
+		
+		log.info("Please enter your user name");
+		
+		String userNameEntered = "";
+		String passwordEntered = "";
+		
+		customer = new Customer();
+		
+		userNameEntered = sc.nextLine();
+		try {
+			customer = customerCRUDService.getCustomerByLoginUserName(userNameEntered);
+		} catch (BusinessException e) {
+				log.info(e.getMessage());
+				customer = new Customer();
+		}
+		
+		if(customer.getLogin_user_name()!=null) {
+			
+			
+			
+			log.info("Please enter your password");
+			
+			
+			passwordEntered = sc.nextLine();
+			try {
+				customer = customerCRUDService.getCustomerByIdAndPassword(customer.getId(), passwordEntered);
+			} catch (BusinessException e) {
+				log.info(e.getMessage());
+				customer = new Customer();
+			}
+		
+			
+			if(customer.getFirst_name()!=null) {
+				spaceOutTheOldMessages();
+				log.info("Login Successful");
+				
+				CustomerMainMenu(sc,customer,customerCRUDService);
+				
+			}else {
+				log.info("The password you entered is incorrect. Please try again.");
+			}
+			
+		}else {
+			log.info("User name: "+userNameEntered+" is not found. Please try again");
+		}
+	}
+
+	private static void CustomerMainMenu(Scanner sc, Customer customer, CustomerCrudService customercrudServiceImpl) {
 		log.info("Hello! "+customer.getFirst_name()+". How can I help you today");
 		
 		int chcmm = 0;
@@ -173,16 +179,12 @@ public class Main {
 		
 			switch (chcmm) {
 		
-			case 1:
-			
-				applyAccountMenu(sc,customer,crudServiceImpl);
-			
+			case 1:		applyAccountMenu(sc,customer,customercrudServiceImpl);
 				break;
-			case 2:
-
+			case 2:		viewAccountsBelongToTheCustomer(customer);
 				break;
-			case 3:
-
+			case 3:		atmDepositMenu(sc, customer);
+	
 				break;
 			case 4:
 
@@ -204,13 +206,176 @@ public class Main {
 		
 		} while (chcmm!=7);
 	}
+
+	private static void atmDepositMenu(Scanner sc, Customer customer) {
+		TransactionCrudService transactionCrudService = new TransactionCrudServiceImpl();
+		List<Account> accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
+		String ch = "";
+		
+		if(accountsBelongToCustomer!=null && accountsBelongToCustomer.size()>0) {
+			do {
+				accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
+				log.info("Which account do you want to deposit to?");
+				int index = 1;
+				
+				accountsBelongToCustomer = sortAccountsByType(accountsBelongToCustomer);
+				
+				for (Account a: accountsBelongToCustomer) {
+					log.info(index+")	"+a.getPrintedAccountType()+"("+a.getPrintedAccountStatus() +")\n	Current balance: "+df2.format(a.getCurrent_balance()));
+					index++;
+				}
+				log.info("Enter \"cancel\" to go to main menu");
+				
+				
+				
+				long targetAccountNumber = 0;
+				try {
+					ch = sc.nextLine();
+				} catch (Exception e2) {
+					log.info("Invalid input");
+				}
+				
+				
+				
+				targetAccountNumber = acquireTargetAccountNumber(accountsBelongToCustomer, ch, targetAccountNumber);
+				
+				AccountCrudService accountCrudService = new AccountCrudServiceImpl();
+				boolean isAccountActive = false;
+				try {
+					isAccountActive = accountCrudService.checkIfanAccountIsActive(targetAccountNumber);
+				} catch (BusinessException e1) {
+					log.info(e1.getMessage());
+				}
+				
+				if(ch!=null && !ch.equals("cancel") && !isAccountActive) {
+					log.info("This account is not active. Please contact customer service or visit a local Mybank.");
+					return;
+				}
+				
+				if(targetAccountNumber != 0) {
+					double depositAmount = 0;
+					boolean isValidInput = false;
+					try {
+						log.info("How much do you want to deposite?");
+						depositAmount = Double.parseDouble(sc.nextLine());
+						isValidInput = true;
+					} catch (NumberFormatException e) {
+						log.info("Invalid input");
+					}
+					if(isValidInput) {
+						try {
+							transactionCrudService.createDepositOnlyTransaction(targetAccountNumber, depositAmount);
+						} catch (BusinessException e) {
+							log.info(e.getMessage());
+						}
+					}
+					
+					ch = "cancel";
+				}
+			} while (!ch.equals("cancel"));
+			log.info("Going back to main menu.");
+			spaceOutTheOldMessages();
+		}else {
+			log.info("You don't have an account yet. You can apply for one using this app. Thank you!");
+		}
+	}
+
+	private static List<Account> sortAccountsByType(List<Account> accountsBelongToCustomer) {
+		List<Account> sortedAccountsBelongToCustomerAccounts = new ArrayList<Account>();
+		
+		for (Account a: accountsBelongToCustomer) {
+			if (a.getAccount_type().equals("basic_checking")) {
+				sortedAccountsBelongToCustomerAccounts.add(a);
+			}
+		}
+		
+		for (Account a: accountsBelongToCustomer) {
+			if (a.getAccount_type().equals("basic_saving")) {
+				sortedAccountsBelongToCustomerAccounts.add(a);
+			}
+		}
+		
+		for (Account a: accountsBelongToCustomer) {
+			if (a.getAccount_type().equals("prem_checking")) {
+				sortedAccountsBelongToCustomerAccounts.add(a);
+			}
+		}
+		
+		for (Account a: accountsBelongToCustomer) {
+			if (a.getAccount_type().equals("prem_saving")) {
+				sortedAccountsBelongToCustomerAccounts.add(a);
+			}
+		}
+		
+		return sortedAccountsBelongToCustomerAccounts;
+	}
+
+	private static long acquireTargetAccountNumber(List<Account> accountsBelongToCustomer, String ch,
+			long targetAccountNumber) {
+		switch (ch) {
+		case "1":
+			if(accountsBelongToCustomer.size()>=1) {
+				targetAccountNumber = accountsBelongToCustomer.get(0).getNumber();
+			}
+			break;
+		case "2":
+			if(accountsBelongToCustomer.size()>=2) {
+				targetAccountNumber = accountsBelongToCustomer.get(1).getNumber();
+			}
+			break;
+		case "3":
+			if(accountsBelongToCustomer.size()>=3) {
+				targetAccountNumber = accountsBelongToCustomer.get(2).getNumber();
+			}
+			break;
+		case "4":
+			if(accountsBelongToCustomer.size()>=4) {
+				targetAccountNumber = accountsBelongToCustomer.get(3).getNumber();
+			}
+			break;
+		default: 
+			if (!ch.equals("cancel")) {
+				log.info("The selection was invalid. Please retry.");
+			}
+			break;
+		}
+		return targetAccountNumber;
+	}
+
+
+	private static void viewAccountsBelongToTheCustomer(Customer customer) {
+		
+		List<Account> accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
+		
+		if(accountsBelongToCustomer.size()>0) {
+			for (Account a: accountsBelongToCustomer) {
+				log.info(a.getAccountBalance());
+				log.info("Account status: "+a.getPrintedAccountStatus());
+				log.info("");
+			}
+		}else {
+			log.info("You don't have any account yet. You can apply for one using this app. Thank you!");
+		}
+	}
+
+	private static List<Account> getTheListOfTheAccountOwnedByCustomer(Customer customer) {
+		List<Account> accountsBelongToCustomer = new ArrayList<Account>();
+		AccountCrudService accountCrudService = new AccountCrudServiceImpl();
+		try {
+			accountsBelongToCustomer = accountCrudService.getAccountsByCustomerId(customer.getId());
+		} catch (BusinessException e) {
+			log.info(e);
+		}
+		return accountsBelongToCustomer;
+	}
 	
-	static void applyAccountMenu(Scanner sc, Customer customer, CustomerCrudService crudServiceImpl) {
+	static void applyAccountMenu(Scanner sc, Customer customer, CustomerCrudService customercrudServiceImpl) {
 		
 		AccountTypeReadService accountTypeReadService = new AccountTypeReadServiceImpl();
 		
 		int chaam = 0;
 		do {
+			
 			printApplicableAccounts(customer);
 			
 			chaam = acquireUserInput(sc, chaam);
@@ -226,7 +391,7 @@ public class Main {
 				}
 				
 				if(atbc!=null) {
-					applyNewAccountWithInitialBalance(customer, sc, atbc, crudServiceImpl);
+					applyNewAccountWithInitialBalance(customer, sc, atbc, customercrudServiceImpl);
 				}
 				
 				
@@ -242,7 +407,7 @@ public class Main {
 				}
 				
 				if(atbs!=null) {
-					applyNewAccountWithInitialBalance(customer, sc, atbs, crudServiceImpl);
+					applyNewAccountWithInitialBalance(customer, sc, atbs, customercrudServiceImpl);
 				}
 				
 				break;
@@ -257,7 +422,7 @@ public class Main {
 				}
 				
 				if(atpc!=null) {
-					applyNewAccountWithInitialBalance(customer, sc, atpc, crudServiceImpl);
+					applyNewAccountWithInitialBalance(customer, sc, atpc, customercrudServiceImpl);
 				}
 				
 				break;
@@ -272,7 +437,7 @@ public class Main {
 				}
 				
 				if(atps!=null) {
-					applyNewAccountWithInitialBalance(customer, sc, atps, crudServiceImpl);
+					applyNewAccountWithInitialBalance(customer, sc, atps, customercrudServiceImpl);
 				}
 
 				
@@ -317,7 +482,7 @@ public class Main {
 		log.info("5) Go back to Main Menu");
 	}
 	
-	static void applyNewAccountWithInitialBalance(Customer customer, Scanner sc, AccountType at, CustomerCrudService crudServiceImpl) {
+	static void applyNewAccountWithInitialBalance(Customer customer, Scanner sc, AccountType at, CustomerCrudService customercrudServiceImpl) {
 
 		String accType = at.getType();
 			
@@ -398,7 +563,7 @@ public class Main {
 									log.info("Thank you! Your application has been submitted! The application may take up to 7 days to proccess.");
 									spaceOutTheOldMessages();
 									try {
-										customer = crudServiceImpl.getCustomerById(customer.getId());
+										customer = customercrudServiceImpl.getCustomerById(customer.getId());
 									} catch (BusinessException e) {
 										log.info("Failed to update player.");
 									}
@@ -479,24 +644,8 @@ public class Main {
 	}
 
 	private static void printTheInfoOfTheSelectedAccountType(AccountType at) {
-		switch (at.getType()) {
-		case "basic_checking":
-			log.info("Here is the basic infomation of a Basic Checking account:");
-			break;
-		case "basic_saving":
-			log.info("Here is the basic infomation of a Basic Saving account:");
-			break;
-		case "prem_checking":
-			log.info("Here is the basic infomation of a Premium Checking account:");
-			break;
-		case "prem_saving":
-			log.info("Here is the basic infomation of a Premium Saving account:");
-			break;
-
-		default:
-			break;
-		}
 		
+		log.info("Here is the basic infomation of a "+at.getPrintedAccountType()+" account:");
 		log.info("");
 		log.info(at.toString());
 	}

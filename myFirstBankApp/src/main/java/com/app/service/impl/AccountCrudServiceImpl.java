@@ -1,5 +1,6 @@
 package com.app.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.app.dao.AccountCrudDAO;
@@ -38,12 +39,6 @@ public class AccountCrudServiceImpl implements AccountCrudService {
 	}
 
 	@Override
-	public List<Account> getAccountsByCustomerId() throws BusinessException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public List<Account> getAccountsByCustomerIdAndUnapprovedStatus() throws BusinessException {
 		// TODO Auto-generated method stub
 		return null;
@@ -67,6 +62,32 @@ public class AccountCrudServiceImpl implements AccountCrudService {
 		long accountNumber = 0;
 		accountNumber = accountCrudDAO.getAccountByCustomerIdAndAccountType(id, accountType);
 		return accountNumber;
+	}
+
+	@Override
+	public List<Account> getAccountsByCustomerId(long id) throws BusinessException {
+		List<Account> accountsBelongtoCustomer = null;
+		accountsBelongtoCustomer = accountCrudDAO.getAccountsByCustomerId(id);
+		return accountsBelongtoCustomer;
+	}
+
+//	@Override
+//	public int depositToAnAccountByCustomerAndAccountNumber(Customer customer, long accountNumber, double depositAmount)
+//			throws BusinessException {
+//		int c = 0;
+//		if(depositAmount>0.01d) {
+//			accountCrudDAO.depositToAnAccountByCustomerAndAccountNumber(customer, accountNumber, depositAmount);
+//		}else {
+//			throw new BusinessException("You have to deposit $0.01 or more to make it a valid deposit.");
+//		}
+//		return c;
+//	}
+
+	@Override
+	public boolean checkIfanAccountIsActive(long accountNumber) throws BusinessException {
+		boolean b = false;
+		b = accountCrudDAO.checkIfanAccountIsActive(accountNumber);
+		return b;
 	}
 
 }
