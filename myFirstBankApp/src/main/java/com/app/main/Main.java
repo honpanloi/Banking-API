@@ -1,6 +1,5 @@
 package com.app.main;
 
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -14,6 +13,7 @@ import com.app.model.Account;
 import com.app.model.AccountType;
 import com.app.model.Customer;
 import com.app.model.Employee;
+import com.app.model.Transaction;
 import com.app.service.AccountCrudService;
 import com.app.service.AccountTypeReadService;
 import com.app.service.CustomerCrudService;
@@ -22,9 +22,8 @@ import com.app.service.impl.AccountCrudServiceImpl;
 import com.app.service.impl.AccountTypeReadServiceImpl;
 import com.app.service.impl.CustomerCrudServiceImpl;
 import com.app.service.impl.TransactionCrudServiceImpl;
+import com.app.util.Tool;
 import com.app.util.Validation;
-
-import java.nio.file.DirectoryIteratorException;
 import java.sql.Date;
 import java.text.DecimalFormat;
 
@@ -221,10 +220,8 @@ public class Main {
 			case 4:		atmWithdrawMenu(sc, customer);
 				break;
 			case 5:		makeATransfer(sc, customer);
-				
 				break;
-			case 6:
-
+			case 6:		acceptTransferMenu(sc, customer);
 				break;
 			case 7:
 				log.info("Thank your for using our service!");
@@ -236,6 +233,93 @@ public class Main {
 		}
 		
 		} while (chcmm!=7);
+	}
+
+	private static void acceptTransferMenu(Scanner sc, Customer customer) {
+		
+		AccountCrudService accountCrudService = new AccountCrudServiceImpl();
+		TransactionCrudService transactionCrudService = new TransactionCrudServiceImpl();
+		
+		//gather the pending transfer for all the account owned by the user
+		List<Account> allAccount = new ArrayList<Account>();
+		try {
+			allAccount =  accountCrudService.getAccountsByCustomerId(customer.getId());
+		} catch (BusinessException e) {
+			log.info("Failed to retrive account infomation");
+		}
+		
+		if(allAccount==null || allAccount.size()==0) {
+			log.info("You don't have an account yet. You can apply for one using this app. Thank you.");
+			return;
+		}
+		
+		//Gather the numbers of account owned
+		List<Transaction> listOfIncomingTransfers = new ArrayList<Transaction>();
+		long[] listOfOwnedAccountId = new long[allAccount.size()];
+		int longIndex = 0;
+		for (Account a : allAccount) {
+			
+			listOfOwnedAccountId[longIndex] = a.getNumber();
+			
+			longIndex++;
+		}
+		
+		//Transaction put all the transactions found into a list
+		
+		for (int i = 0; i < allAccount.size(); i++) {
+			List<Transaction> listOfIncomingTransfersFor1Account = new ArrayList<Transaction>();
+			try {
+				listOfIncomingTransfersFor1Account = transactionCrudService.searchForIncomingTransactions(listOfOwnedAccountId[i]);
+				for (Transaction t : listOfIncomingTransfersFor1Account) {
+					listOfIncomingTransfers.add(t);
+				}
+				
+			} catch (BusinessException e) {
+				log.info("Unable to retrive transcations");
+			}
+			
+		}
+		
+		if(listOfIncomingTransfers.size()==0) {
+			log.info("You don't have any incomming transfers.");
+			return;
+		}
+		
+		
+		//show the gathered pending transfers
+		log.info("You have following incoming transfers:");
+		for (Transaction t: listOfIncomingTransfers) {
+			log.info("To account: " +t.getDeposit_to());
+			log.info("Amount: " +t.getAmount());
+			log.info("Date requested: " +t.getTime_requested());
+		}
+		
+		//ask the user to accept the transfers
+		log.info("Do you want to accept them?");
+		log.info("1) Yes");
+		log.info("2) Not now. Go back to main menu.");
+		int ch = 0;
+		do {
+			ch = acquireUserIntInput(sc, ch);
+		} while (ch!=1 && ch!=2);
+		
+		if(ch==2) {
+			log.info("Going back to main menu.");
+			return;
+		}
+		
+		//execute the transfer transactions
+		for (Transaction t: listOfIncomingTransfers) {
+			try {
+				transactionCrudService.acceptAnIncomingTransfer(t.getTrans_number());
+				Tool.get2SecondProcessingTime();
+			} catch (BusinessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		log.info("All transfer was completed.");
 	}
 
 	private static void atmDepositMenu(Scanner sc, Customer customer) {
@@ -587,20 +671,8 @@ public class Main {
 		case "5":
 			//ask for the account number
 			log.info("Please enter the target account number to transfer to:");
-			long targetAccountNumberTransferToToBe = acquireUserLongInput(sc);
-			//Verify the account status of the target account
-			AccountCrudService service = new AccountCrudServiceImpl();
-			boolean isAnActiveAccount= false;
-			try {
-				isAnActiveAccount = service.checkIfanAccountIsActive(targetAccountNumberTransferTo);
-			} catch (BusinessException e) {
-				log.info("Unable to find the account.");
-				targetAccountNumberTransferTo = 0;
-			}
-			//set the targetAccountNumberTransferTo to the user input
-			if (isAnActiveAccount) {
-				targetAccountNumberTransferTo = targetAccountNumberTransferToToBe;
-			}
+			targetAccountNumberTransferTo = acquireUserLongInput(sc);
+	
 			break;
 		default: 
 			if (!ch.equals("cancel")) {

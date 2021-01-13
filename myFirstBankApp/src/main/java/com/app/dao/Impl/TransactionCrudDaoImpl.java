@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Savepoint;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -14,6 +16,7 @@ import com.app.dao.dbutil.PostgresqlConnection;
 import com.app.exception.BusinessException;
 import com.app.main.Main;
 import com.app.model.Account;
+import com.app.model.Transaction;
 import com.app.util.Tool;
 
 public class TransactionCrudDaoImpl implements TransactionCrudDao {
@@ -323,12 +326,12 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 			c += preparedStatement.executeUpdate();
 			
 			//6.search for the transaction created earlier
-			String sql1 = "select \"trans_number\" from my_bank_app.\"transaction\" where time_requested = ? and initiator_acc = ?";
-			PreparedStatement preparedStatement1 = connection.prepareStatement(sql1);
-			preparedStatement1.setString(1, currentDate);
-			preparedStatement1.setLong(2, targetAccountNumberTransferFrom);
+			sql = "select \"trans_number\" from my_bank_app.\"transaction\" where time_requested = ? and initiator_acc = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, currentDate);
+			preparedStatement.setLong(2, targetAccountNumberTransferFrom);
 			
-			ResultSet resultSet = preparedStatement1.executeQuery();
+			ResultSet resultSet = preparedStatement.executeQuery();
 			
 			if(resultSet.next()) {
 				transactionNum = resultSet.getLong("trans_number");
@@ -352,6 +355,9 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 				connection.setAutoCommit(true);
 				log.info("Transfer successful.");
 				Main.spaceOutTheOldMessages();
+			}else {
+				connection.rollback(sp1);
+				log.info("Transfer is not complete.");
 			}
 			
 		} catch (ClassNotFoundException e) {
@@ -374,8 +380,243 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 	@Override
 	public int createTransferTransactionToAnotherPerson(long targetAccountNumberTransferTo,
 			long targetAccountNumberTransferFrom, double amount) throws BusinessException {
-		// TODO Auto-generated method stub
-		return 0;
+		int c = 0;
+		long transactionNum = 0;
+		AccountCrudDAO accountCrudDAO = new AccountCrudDAOImpl();
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			
+			//1.check if the TransferFrom has enough balance
+			boolean isBalanceSufficient = false;
+			Account accountFrom = accountCrudDAO.getAccountByAccountNum(targetAccountNumberTransferFrom);
+			isBalanceSufficient = (accountFrom.getCurrent_balance()>=amount);
+			if(!isBalanceSufficient) {
+				log.info("The target account does not have enough fund. Please try again later.");
+				return c;
+			}
+			c++;
+			
+			
+			
+			//2.create the transaction as pending
+			String sql = "insert into my_bank_app.\"transaction\"(\"type\",status, time_requested, initiator_acc, amount,withdraw_from,deposit_to) values (?,?,?,?,?,?,?)";
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, "transfer");
+			preparedStatement.setString(2, "pending");
+			String currentDate = Tool.getPrintedCurrentDate();
+			preparedStatement.setString(3, currentDate);
+			preparedStatement.setLong(4, accountFrom.getNumber());
+			preparedStatement.setDouble(5, amount);
+			preparedStatement.setLong(6, targetAccountNumberTransferFrom);
+			preparedStatement.setLong(7, targetAccountNumberTransferTo);
+			
+			c += preparedStatement.executeUpdate();
+			
+			//2.1 add processing time
+			Tool.get2SecondProcessingTime();
+			//3.create save point
+			connection.setAutoCommit(false);
+			Savepoint sp1 = connection.setSavepoint();
+			
+			//4.subtract money from targetAccountNumberTransferFrom
+			double projectedBalanceAfterWithdraw = accountFrom.getCurrent_balance()-amount;
+			sql = "update my_bank_app.account set current_balance = ? where \"number\" = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setDouble(1, projectedBalanceAfterWithdraw);
+			preparedStatement.setLong(2, targetAccountNumberTransferFrom);
+			c += preparedStatement.executeUpdate();
+			
+			//5.search for the transaction created earlier
+			sql = "select \"trans_number\" from my_bank_app.\"transaction\" where time_requested = ? and initiator_acc = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, currentDate);
+			preparedStatement.setLong(2, targetAccountNumberTransferFrom);
+			
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			if(resultSet.next()) {
+				transactionNum = resultSet.getLong("trans_number");
+				c+=1;
+			}
+			
+			//6.update the transaction for how much it withdraw
+			sql = "update my_bank_app.\"transaction\" set balance_after_withdraw = ? where trans_number = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setDouble(1, projectedBalanceAfterWithdraw);
+			preparedStatement.setLong(2, transactionNum);
+			c += preparedStatement.executeUpdate();
+			
+			
+			if(c==5) {
+				connection.commit();
+				connection.setAutoCommit(true);
+				log.info("Transfer requested.");
+				log.info("If the other account holder does not accpet the transfer, or the account holder does not accept it "+
+				"\nwithin 90 day, the transfer amount will be deposited back to your account.");
+				Main.spaceOutTheOldMessages();
+			}else {
+				connection.rollback(sp1);
+				log.info("Transfer is not complete.");
+			}
+			
+		} catch (ClassNotFoundException e) {
+			log.info(e);
+			log.info("connection fail");
+			
+		} catch (SQLException e) {
+			log.info(e);
+			log.info("sql command fail");
+			 
+		}finally {
+			if(c<5) {
+				putCanceledToTheTransactionStatus(transactionNum);
+			}
+		}
+		
+		return c;
+	}
+
+	@Override
+	public List<Transaction> searchForIncomingTransactions(long depositToAccountNum) throws BusinessException {
+		List<Transaction> result = null;
+		
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			
+			String sql = "select * from my_bank_app.\"transaction\" where deposit_to = ? and \"status\" = 'pending'";
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1,depositToAccountNum);
+				
+			ResultSet resultSet = preparedStatement.executeQuery();
+				
+			result = new ArrayList<Transaction>();
+			while(resultSet.next()) {
+				Transaction transcation = new Transaction();
+				transcation.setTrans_number(resultSet.getLong("trans_number"));
+				transcation.setType(resultSet.getString("type"));
+				transcation.setWithdraw_from(resultSet.getLong("withdraw_from"));
+				transcation.setDeposit_to(resultSet.getLong("deposit_to"));
+				transcation.setStatus(resultSet.getString("status"));
+				transcation.setTime_requested(resultSet.getString("time_requested"));
+				transcation.setTime_completed(resultSet.getString("time_completed"));
+				transcation.setAmount(resultSet.getDouble("amount"));
+				transcation.setBalance_after_withdraw(resultSet.getDouble("balance_after_withdraw"));
+				transcation.setBalance_after_deposit(resultSet.getDouble("balance_after_deposit"));
+				transcation.setInitiator_acc(resultSet.getLong("initiator_acc"));
+				result.add(transcation);
+			}
+			
+		}catch (ClassNotFoundException e) {
+			log.info(e);
+			log.info("connection fail");
+			
+		} catch (SQLException e) {
+			log.info(e);
+			log.info("sql command fail");
+			 
+		}
+		return result;
+	}
+
+	@Override
+	public int acceptAnIncomingTransfer(long trasactionNum) throws BusinessException {
+		int c= 0;
+		
+		
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			//gather all the transaction information
+			Transaction transcation = null;
+			transcation = getTranscationById(trasactionNum);
+			c++;
+			
+			//Gather the current balance of the deposit to account
+			String sql = "select current_balance, account_type from my_bank_app.account where \"number\" = ?";
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1, transcation.getDeposit_to());
+			ResultSet resultSet = preparedStatement.executeQuery();
+			double currentBalance = 0;
+			if(resultSet.next()) {
+			currentBalance = resultSet.getDouble("current_balance");
+			c+=1;
+			}
+			System.out.println("2");
+			//calculate the projected balance
+			double projectedbalance = currentBalance + transcation.getAmount();
+		
+			connection.setAutoCommit(false);
+			Savepoint sp1 = connection.setSavepoint();
+		
+			//deposit the amount
+			sql = "update my_bank_app.account set current_balance = ? where \"number\" = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setDouble(1, projectedbalance);
+			preparedStatement.setLong(2, transcation.getDeposit_to());
+
+			c += preparedStatement.executeUpdate();
+			System.out.println("3");
+			//update the status and date completed
+			sql = "update my_bank_app.\"transaction\" set \"status\" = 'completed', time_completed = ?, balance_after_deposit = ? where trans_number = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, Tool.getPrintedCurrentDate());
+			preparedStatement.setDouble(2, projectedbalance);
+			preparedStatement.setLong(3, transcation.getTrans_number());
+			c += preparedStatement.executeUpdate();
+			System.out.println("4");
+			
+			if(c==4) {
+			connection.commit();
+			connection.setAutoCommit(true);
+			log.info("Transaction completed.");
+			Main.spaceOutTheOldMessages();
+			
+			}else {
+			connection.rollback(sp1);
+			log.info("An error has occurred. Transaction Incomplete.");
+			Main.spaceOutTheOldMessages();
+		}
+		
+		
+		} catch (ClassNotFoundException e) {
+			log.info(e);
+			log.info("connection fail");
+		} catch (SQLException e) {
+			log.info(e);
+			log.info("sql command fail");
+		}
+		return c;
+	}
+	
+	public Transaction getTranscationById(long trasactionNum)throws BusinessException {
+		Transaction transcation = null;
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			
+		String sql = "select * from my_bank_app.\"transaction\" where \"trans_number\" = ?";
+		PreparedStatement preparedStatement = connection.prepareStatement(sql);
+		preparedStatement.setLong(1, trasactionNum);
+		ResultSet resultSet = preparedStatement.executeQuery();
+		
+		if(resultSet.next()) {
+			transcation = new Transaction();
+			transcation.setTrans_number(trasactionNum);
+			transcation.setType(resultSet.getString("type"));
+			transcation.setWithdraw_from(resultSet.getLong("withdraw_from"));
+			transcation.setDeposit_to(resultSet.getLong("deposit_to"));
+			transcation.setStatus(resultSet.getString("status"));
+			transcation.setTime_requested(resultSet.getString("time_requested"));
+			transcation.setTime_completed(resultSet.getString("time_completed"));
+			transcation.setAmount(resultSet.getDouble("amount"));
+			transcation.setBalance_after_withdraw(resultSet.getDouble("balance_after_withdraw"));
+			transcation.setBalance_after_deposit(resultSet.getDouble("balance_after_deposit"));
+			transcation.setInitiator_acc(resultSet.getLong("initiator_acc"));
+			
+		}
+		
+		} catch (ClassNotFoundException e) {
+			log.info(e);
+			log.info("connection fail");
+		} catch (SQLException e) {
+			log.info(e);
+			log.info("sql command fail");
+		}
+		return transcation;
 	}
 
 }

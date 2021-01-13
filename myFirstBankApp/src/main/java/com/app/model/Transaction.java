@@ -1,6 +1,6 @@
 package com.app.model;
 
-public class Transcation {
+public class Transaction {
 	private long Trans_number;
 	private String type;
 	private long withdraw_from;
@@ -80,11 +80,11 @@ public class Transcation {
 		this.initiator_acc = initiator_acc;
 	}
 	
-	public Transcation() {
+	public Transaction() {
 		
 	}
 	
-	public Transcation(long trans_number, String type, long withdraw_from, long deposit_to, String status,
+	public Transaction(long trans_number, String type, long withdraw_from, long deposit_to, String status,
 			String time_requested, String time_completed, double amount, double balance_after_withdraw,
 			double balance_after_deposit, long initiator_acc) {
 		super();

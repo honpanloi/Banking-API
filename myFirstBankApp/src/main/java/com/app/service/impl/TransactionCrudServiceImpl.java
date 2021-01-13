@@ -1,8 +1,11 @@
 package com.app.service.impl;
 
+import java.util.List;
+
 import com.app.dao.TransactionCrudDao;
 import com.app.dao.Impl.TransactionCrudDaoImpl;
 import com.app.exception.BusinessException;
+import com.app.model.Transaction;
 import com.app.service.TransactionCrudService;
 
 public class TransactionCrudServiceImpl implements TransactionCrudService {
@@ -39,8 +42,21 @@ public class TransactionCrudServiceImpl implements TransactionCrudService {
 	@Override
 	public int createTransferTransactionToAnotherPerson(long targetAccountNumberTransferTo,
 			long targetAccountNumberTransferFrom, double amount) throws BusinessException {
-		// TODO Auto-generated method stub
-		return 0;
+		int c = 0;
+		transactionCrudDao.createTransferTransactionToAnotherPerson(targetAccountNumberTransferTo, targetAccountNumberTransferFrom, amount);
+		return c;
+	}
+	@Override
+	public List<Transaction> searchForIncomingTransactions(long depositToAccountNum) throws BusinessException {
+		List<Transaction> result= null;
+		result = transactionCrudDao.searchForIncomingTransactions(depositToAccountNum);
+		return result;
+	}
+	@Override
+	public int acceptAnIncomingTransfer(long trasactionNum) throws BusinessException {
+		int c = 0;
+		transactionCrudDao.acceptAnIncomingTransfer(trasactionNum);
+		return c;
 	}
 
 }
