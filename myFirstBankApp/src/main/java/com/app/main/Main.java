@@ -254,9 +254,17 @@ public class Main {
 		
 			case 1:		customerRegistrationByEmployee(employee, sc);
 				break;
-			case 2:		
+			case 2:		applyAccountByEmployee(sc, employee);
+						
 				break;
 			case 3:		
+				//get a customer id
+				//search for a unproved account
+				//show the credit score of the customer
+				//show the credit score requirement of that account type
+				//select which account to approve
+				//refresh the list and select again
+				//
 				break;
 			case 4:		
 				
@@ -274,6 +282,39 @@ public class Main {
 		}
 		
 		} while (chcmm!=7);
+	}
+
+	private static void applyAccountByEmployee(Scanner sc, Employee employee) {
+		
+		//Ask for a customer by id
+		log.info("What is the customer's id?");
+		
+		//Acquire employee input
+		long customerId = 0;
+		do {
+			customerId = acquireUserLongInput(sc);
+		} while (!Validation.isValidCustomerId(customerId));
+		
+		//acquire customer 
+		CustomerCrudService customerCrudService = new CustomerCrudServiceImpl();
+		Customer customer = null;
+		try {
+			customer = customerCrudService.getCustomerById(customerId);
+		} catch (BusinessException e) {
+			log.info("Unable to find the customer");
+		}
+		
+		if(customer == null) {
+			log.info("No customer found. Going back.");
+			return;
+		}
+		
+		//use the account apply menu
+		applyAccountMenu(sc, customer, customerCrudService);
+		//auto approve any store the employee info
+		
+		employee.getId();
+		
 	}
 
 	private static void viewAnAccountInfoByAccountNumber(Scanner sc, AccountCrudService accountCrudService) {

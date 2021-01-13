@@ -76,6 +76,17 @@ public class Validation {
 		return b;
 	}
 	
+	public static boolean isValidCustomerId(long customerId) {
+		boolean b = false;
+		if(customerId>=10000) {
+			b = true;
+		}
+		
+		return b;
+	}
+	
+
+
 	public static boolean isValidTransactionAmount(double d) {
 		boolean b = false;
 		
