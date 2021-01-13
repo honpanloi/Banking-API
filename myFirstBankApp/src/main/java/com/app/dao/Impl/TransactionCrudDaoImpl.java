@@ -8,10 +8,12 @@ import java.sql.Savepoint;
 
 import org.apache.log4j.Logger;
 
+import com.app.dao.AccountCrudDAO;
 import com.app.dao.TransactionCrudDao;
 import com.app.dao.dbutil.PostgresqlConnection;
 import com.app.exception.BusinessException;
 import com.app.main.Main;
+import com.app.model.Account;
 import com.app.util.Tool;
 
 public class TransactionCrudDaoImpl implements TransactionCrudDao {
@@ -96,9 +98,15 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 			if(c==5) {
 				connection.commit();
 				connection.setAutoCommit(true);
+				log.info("Deposit completed.");
+				Main.spaceOutTheOldMessages();
+			}else {
+				log.info("An error has occurred. Transaction incompleted");
+				connection.rollback(sp1);
+				Main.spaceOutTheOldMessages();
 			}
 			
-			log.info("Deposit completed.");
+			
 			
 		} catch (ClassNotFoundException e) {
 			log.info(e);
@@ -204,6 +212,9 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 			preparedStatement4.setLong(2, accountNumber);
 			ResultSet resultSet1 = preparedStatement4.executeQuery();
 			
+			sql = "select \"trans_number\" from my_bank_app.\"transaction\" where time_requested = ? and initiator_acc = ?";
+
+			
 			if(resultSet1.next()) {
 				transactionNum = resultSet1.getLong("trans_number");
 				c+=1;
@@ -227,9 +238,15 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 			if(c==6) {
 				connection.commit();
 				connection.setAutoCommit(true);
+				log.info("Withdrawal completed.");
+				Main.spaceOutTheOldMessages();
+			}else {
+				log.info("An error has occurred. Transaction incompleted");
+				connection.rollback(sp1);
+				Main.spaceOutTheOldMessages();
 			}
 			
-			log.info("Withdrawal completed.");
+			
 			
 		} catch (ClassNotFoundException e) {
 			log.info(e);
@@ -246,6 +263,119 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 		}
 
 		return c;
+	}
+
+	@Override
+	public int createTransferTransactionWhenBothAccountsBelongToTheSamePerson(
+			long targetAccountNumberTransferTo, 
+			long targetAccountNumberTransferFrom,
+			double amount) throws BusinessException {
+		int c = 0;
+		long transactionNum = 0;
+		AccountCrudDAO accountCrudDAO = new AccountCrudDAOImpl();
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			
+			//1.check if the TransferFrom has enough balance
+			boolean isBalanceSufficient = false;
+			Account accountFrom = accountCrudDAO.getAccountByAccountNum(targetAccountNumberTransferFrom);
+			isBalanceSufficient = (accountFrom.getCurrent_balance()>=amount);
+			if(!isBalanceSufficient) {
+				log.info("The target account does not have enough fund. Please try again later.");
+				return c;
+			}
+			c++;
+			
+			//2.create the transaction as pending
+			String sql = "insert into my_bank_app.\"transaction\"(\"type\",status, time_requested, initiator_acc, amount,withdraw_from,deposit_to) values (?,?,?,?,?,?,?)";
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, "transfer");
+			preparedStatement.setString(2, "pending");
+			String currentDate = Tool.getPrintedCurrentDate();
+			preparedStatement.setString(3, currentDate);
+			preparedStatement.setLong(4, accountFrom.getNumber());
+			preparedStatement.setDouble(5, amount);
+			preparedStatement.setLong(6, targetAccountNumberTransferFrom);
+			preparedStatement.setLong(7, targetAccountNumberTransferTo);
+			
+			c += preparedStatement.executeUpdate();
+			
+			//2.1 add processing time
+			Tool.get2SecondProcessingTime();
+			//3.create save point
+			connection.setAutoCommit(false);
+			Savepoint sp1 = connection.setSavepoint();
+			
+			//4.subtract money from targetAccountNumberTransferFrom
+			double projectedBalanceAfterWithdraw = accountFrom.getCurrent_balance()-amount;
+			sql = "update my_bank_app.account set current_balance = ? where \"number\" = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setDouble(1, projectedBalanceAfterWithdraw);
+			preparedStatement.setLong(2, targetAccountNumberTransferFrom);
+			c += preparedStatement.executeUpdate();
+			
+			//5.add money to targetAccountNumberTransferTo
+			Account accountTo = accountCrudDAO.getAccountByAccountNum(targetAccountNumberTransferTo);
+			double projectedBalanceAfterDeposit = accountTo.getCurrent_balance()+amount;
+			sql = "update my_bank_app.account set current_balance = ? where \"number\" = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setDouble(1, projectedBalanceAfterDeposit);
+			preparedStatement.setLong(2, targetAccountNumberTransferTo);
+			c += preparedStatement.executeUpdate();
+			
+			//6.search for the transaction created earlier
+			String sql1 = "select \"trans_number\" from my_bank_app.\"transaction\" where time_requested = ? and initiator_acc = ?";
+			PreparedStatement preparedStatement1 = connection.prepareStatement(sql1);
+			preparedStatement1.setString(1, currentDate);
+			preparedStatement1.setLong(2, targetAccountNumberTransferFrom);
+			
+			ResultSet resultSet = preparedStatement1.executeQuery();
+			
+			if(resultSet.next()) {
+				transactionNum = resultSet.getLong("trans_number");
+				c+=1;
+			}
+			
+			
+			//7.update the transaction created earlier
+			sql = "update my_bank_app.\"transaction\" set \"status\" = 'completed', time_completed = ?, balance_after_deposit = ?, balance_after_withdraw = ?  where trans_number = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, Tool.getPrintedCurrentDate());
+			preparedStatement.setDouble(2, projectedBalanceAfterDeposit);
+			preparedStatement.setDouble(3, projectedBalanceAfterWithdraw);
+			preparedStatement.setLong(4, transactionNum);
+			
+			
+			c += preparedStatement.executeUpdate();
+			
+			if(c==6) {
+				connection.commit();
+				connection.setAutoCommit(true);
+				log.info("Transfer successful.");
+				Main.spaceOutTheOldMessages();
+			}
+			
+		} catch (ClassNotFoundException e) {
+			log.info(e);
+			log.info("connection fail");
+			
+		} catch (SQLException e) {
+			log.info(e);
+			log.info("sql command fail");
+			 
+		}finally {
+			if(c<6) {
+				putCanceledToTheTransactionStatus(transactionNum);
+			}
+		}
+		
+		return c;
+	}
+
+	@Override
+	public int createTransferTransactionToAnotherPerson(long targetAccountNumberTransferTo,
+			long targetAccountNumberTransferFrom, double amount) throws BusinessException {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

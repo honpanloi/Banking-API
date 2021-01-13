@@ -76,5 +76,13 @@ public class Validation {
 		return b;
 	}
 	
-	
+	public static boolean isValidTransactionAmount(double d) {
+		boolean b = false;
+		
+		if(d>=0.01d && d<20000.0d) {
+			b = true;
+		}
+
+		return b;
+	}
 }

@@ -33,9 +33,12 @@ public class AccountCrudServiceImpl implements AccountCrudService {
 	}
 
 	@Override
-	public Account getAccountByAccountNum() throws BusinessException {
-		// TODO Auto-generated method stub
-		return null;
+	public Account getAccountByAccountNum(long accountNumber) throws BusinessException {
+		Account account = null;
+		if(accountNumber>200000l) {
+			account = accountCrudDAO.getAccountByAccountNum(accountNumber);
+		}
+		return account;
 	}
 
 	@Override
@@ -70,18 +73,6 @@ public class AccountCrudServiceImpl implements AccountCrudService {
 		accountsBelongtoCustomer = accountCrudDAO.getAccountsByCustomerId(id);
 		return accountsBelongtoCustomer;
 	}
-
-//	@Override
-//	public int depositToAnAccountByCustomerAndAccountNumber(Customer customer, long accountNumber, double depositAmount)
-//			throws BusinessException {
-//		int c = 0;
-//		if(depositAmount>0.01d) {
-//			accountCrudDAO.depositToAnAccountByCustomerAndAccountNumber(customer, accountNumber, depositAmount);
-//		}else {
-//			throw new BusinessException("");
-//		}
-//		return c;
-//	}
 
 	@Override
 	public boolean checkIfanAccountIsActive(long accountNumber) throws BusinessException {

@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -23,6 +24,7 @@ import com.app.service.impl.CustomerCrudServiceImpl;
 import com.app.service.impl.TransactionCrudServiceImpl;
 import com.app.util.Validation;
 
+import java.nio.file.DirectoryIteratorException;
 import java.sql.Date;
 import java.text.DecimalFormat;
 
@@ -47,7 +49,7 @@ public class Main {
 			log.info("2) I am an employee");
 			log.info("3) Exit ppplication");
 						
-			ch = acquireUserInput(sc, ch);
+			ch = acquireUserIntInput(sc, ch);
 			
 			switch (ch) {
 			
@@ -70,9 +72,28 @@ public class Main {
 
 	}
 
-	private static int acquireUserInput(Scanner sc, int ch) {
+	private static long acquireUserLongInput(Scanner sc) {
+		long ch = 0;
+		try {
+			ch= Long.parseLong(sc.nextLine());
+		}catch(NumberFormatException e) {
+			
+		}
+		return ch;
+	}
+	
+	private static int acquireUserIntInput(Scanner sc, int ch) {
 		try {
 			ch= Integer.parseInt(sc.nextLine());
+		}catch(NumberFormatException e) {
+			
+		}
+		return ch;
+	}
+	
+	private static String acquireUserStringInput(Scanner sc, String ch) {
+		try {
+			ch= sc.nextLine();
 		}catch(NumberFormatException e) {
 			
 		}
@@ -91,7 +112,7 @@ public class Main {
 			log.info("2) Register");
 			log.info("3) Go back");
 			
-			chclm = acquireUserInput(sc, chclm);
+			chclm = acquireUserIntInput(sc, chclm);
 			
 			switch (chclm) {
 			
@@ -187,7 +208,7 @@ public class Main {
 			log.info("6) Check incoming transfer");
 			log.info("7) Log out");
 			
-			chcmm = acquireUserInput(sc, chcmm);
+			chcmm = acquireUserIntInput(sc, chcmm);
 		
 			switch (chcmm) {
 		
@@ -199,7 +220,7 @@ public class Main {
 				break;
 			case 4:		atmWithdrawMenu(sc, customer);
 				break;
-			case 5:
+			case 5:		makeATransfer(sc, customer);
 				
 				break;
 			case 6:
@@ -226,14 +247,9 @@ public class Main {
 			do {
 				accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
 				log.info("Which account do you want to deposit to?");
-				int index = 1;
 				
 				accountsBelongToCustomer = sortAccountsByType(accountsBelongToCustomer);
-				
-				for (Account a: accountsBelongToCustomer) {
-					log.info(index+")	"+a.getPrintedAccountType()+"("+a.getPrintedAccountStatus() +")\n	Current balance: "+df2.format(a.getCurrent_balance()));
-					index++;
-				}
+				printTheAccounts(accountsBelongToCustomer);
 				log.info("Enter \"cancel\" to go to main menu");
 				
 
@@ -299,23 +315,13 @@ public class Main {
 			do {
 				accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
 				log.info("Which account do you want to withdraw from?");
-				int index = 1;
 				
 				accountsBelongToCustomer = sortAccountsByType(accountsBelongToCustomer);
-				
-				for (Account a: accountsBelongToCustomer) {
-					log.info(index+")	"+a.getPrintedAccountType()+"("+a.getPrintedAccountStatus() +")\n	Current balance: $"+df2.format(a.getCurrent_balance()));
-					index++;
-				}
+				printTheAccounts(accountsBelongToCustomer);
 				log.info("Enter \"cancel\" to go to main menu");
 				
 
-				try {
-					ch = sc.nextLine();
-				} catch (Exception e2) {
-					log.info("Invalid input. Please try again.");
-
-				} 
+				ch = acquireUserStringInput(sc, ch);
 				
 				long targetAccountNumber = 0;
 				targetAccountNumber = acquireTargetAccountNumber(accountsBelongToCustomer, ch, targetAccountNumber);
@@ -366,74 +372,246 @@ public class Main {
 	private static void makeATransfer(Scanner sc, Customer customer) {
 		TransactionCrudService transactionCrudService = new TransactionCrudServiceImpl();
 		List<Account> accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
-		String ch = "";
+		String chFrom = "";
 		
 		if(accountsBelongToCustomer!=null && accountsBelongToCustomer.size()>0) {
 			do {
+				//printing the available options to transfer from
 				accountsBelongToCustomer = getTheListOfTheAccountOwnedByCustomer(customer);
 				log.info("Which account do you want to transfer from?");
-				int index = 1;
 				
 				accountsBelongToCustomer = sortAccountsByType(accountsBelongToCustomer);
-				
-				for (Account a: accountsBelongToCustomer) {
-					log.info(index+")	"+a.getPrintedAccountType()+"("+a.getPrintedAccountStatus() +")\n	Current balance: $"+df2.format(a.getCurrent_balance()));
-					index++;
-				}
+				printTheAccounts(accountsBelongToCustomer);
 				log.info("Enter \"cancel\" to go to main menu");
 				
-
-				try {
-					ch = sc.nextLine();
-				} catch (Exception e2) {
-					log.info("Invalid input. Please try again.");
-
-				} 
+				//acquire the user option and set the targetAccountNumberTransferFrom
+				chFrom = acquireUserStringInput(sc, chFrom);
+				long targetAccountNumberTransferFrom = 0;
+				targetAccountNumberTransferFrom = acquireTargetAccountNumber(accountsBelongToCustomer, chFrom, targetAccountNumberTransferFrom);
 				
-				long targetAccountNumber = 0;
-				targetAccountNumber = acquireTargetAccountNumber(accountsBelongToCustomer, ch, targetAccountNumber);
-				
-				if(targetAccountNumber!=0) {
+				//check if the account selected is an active account based on the user input
+				boolean isAccountActive = false;
+				if(targetAccountNumberTransferFrom!=0) {
 					AccountCrudService accountCrudService = new AccountCrudServiceImpl();
-					boolean isAccountActive = false;
+					
 					try {
-						isAccountActive = accountCrudService.checkIfanAccountIsActive(targetAccountNumber);
+						isAccountActive = accountCrudService.checkIfanAccountIsActive(targetAccountNumberTransferFrom);
 					} catch (BusinessException e1) {
 						log.info(e1.getMessage());
 					}
 					
-					if(ch!=null && !ch.equals("cancel") && !isAccountActive) {
+					if(chFrom!=null && !chFrom.equals("cancel") && !isAccountActive) {
 						log.info("This account is not active. Please contact customer service or visit a local Mybank.");
+						spaceOutTheOldMessages();
+					}
+				}
+				
+				//exit the method when the account select is inactive
+				if(!isAccountActive) return;
+
+				//ask for a transfer amount and check if it's valid
+				double transferAmount = 0;
+				boolean isValidTranactionAmount = false;
+				boolean isfundSufficient = false;
+				try {
+					spaceOutTheOldMessages();
+					log.info("How much do you want to transfer?");
+					transferAmount = Double.parseDouble(sc.nextLine());
+				} catch (NumberFormatException e) {
+						log.info("Invalid input");
+				}
+				isValidTranactionAmount = Validation.isValidTransactionAmount(transferAmount);
+				if(!isValidTranactionAmount) {
+					log.info("You can only trasnfer up to $20,000 per transaction, and the minimun trasnfer amount is $0.01.");
+					return;
+				}
+				AccountCrudService accountCrudService = new AccountCrudServiceImpl();
+				try {
+					isfundSufficient = (accountCrudService.getAccountByAccountNum(targetAccountNumberTransferFrom).getCurrent_balance()>transferAmount);
+				} catch (BusinessException e2) {
+					log.info("Unable to verify the account balance. Please contact customer service.");
+				}
+				if(!isfundSufficient) {
+					log.info("The account you selected does not have enough fund to make this transfer. Please try again later.");
+					return;
+				}
+				
+				//printing the available options to transfer from to transfer to
+				for (Iterator<Account> iterator = accountsBelongToCustomer.listIterator(); iterator.hasNext();) {
+					Account a = iterator.next();
+					if(a.getNumber()==targetAccountNumberTransferFrom) {
+						iterator.remove();
+					}
+				}
+				//if(a.getNumber()==targetAccountNumberTransferFrom)
+				
+				log.info("Which account do you want to transfer to?");
+				printTheAccounts(accountsBelongToCustomer);
+				log.info("5) Enter an external account number");
+				log.info("Enter \"cancel\" to go to main menu");
+				
+				//acquire the user option and set the targetAccountNumberTransferTo
+				String chTo = ""; 
+				chTo =	acquireUserStringInput(sc, chFrom);
+				long targetAccountNumberTransferTo = 0;
+				targetAccountNumberTransferTo = acquireTargetAccountNumberTransterTo(sc, accountsBelongToCustomer, chTo, targetAccountNumberTransferTo);
+				
+				//check if the the account selected is an active account based on the user input
+				boolean is2ndAccountActive = false;
+				if(targetAccountNumberTransferTo!=0) {
+					
+					try {
+						is2ndAccountActive = accountCrudService.checkIfanAccountIsActive(targetAccountNumberTransferTo);
+					} catch (BusinessException e1) {
+						log.info(e1.getMessage());
 					}
 					
-					if(isAccountActive && targetAccountNumber != 0) {
-						double withdrawAmount = 0;
-						boolean isValidInput = false;
-						try {
-							log.info("How much do you want to withdraw?");
-							withdrawAmount = Double.parseDouble(sc.nextLine());
-							isValidInput = true;
-						} catch (NumberFormatException e) {
-							log.info("Invalid input");
-						}
-						if(isValidInput) {
-							
-							try {
-								transactionCrudService.createWithdrawOnlyTransaction(targetAccountNumber, withdrawAmount);
-							} catch (BusinessException e) {
-								log.info(e.getMessage());
-							}
-						}
-						
+					if(chTo!=null && !chTo.equals("cancel") && !is2ndAccountActive) {
+						log.info("This account is not active. Please choose another account.");
+						spaceOutTheOldMessages();
 					}
-				
 				}
-			} while (!ch.equals("cancel"));
+				
+				//exit the method when the account select is inactive
+				if(!is2ndAccountActive) return;
+				
+				
+				//Ask for final confirmation
+				boolean isConfirmed = false;
+				if(isValidTranactionAmount && targetAccountNumberTransferFrom!=0 && targetAccountNumberTransferTo!=0) {
+					int chFinal = 0;
+					do {
+						log.info("Please confirm the following information: ");
+						log.info("Transfer from : "+targetAccountNumberTransferFrom);
+						log.info("Transfer to : "+targetAccountNumberTransferTo);
+						log.info("Transfer amount : $"+transferAmount);
+						log.info("1) Confirm");
+						log.info("2) Abandon transfer");
+						chFinal = acquireUserIntInput(sc, chFinal);
+					} while (chFinal!=1 && chFinal!=2);
+					
+					if(chFinal==1) {
+						isConfirmed = true;
+					}
+
+				}
+				
+				//exit the method if the user wants to
+				if(!isConfirmed) {
+					log.info("You abandoned the trasnfer request.");
+					return;
+				}
+				
+				//after confirmation check if both accounts belongs to the same person
+				boolean isBothAccountBelongToUser = false;
+				long ownerId1 = 1;
+				long ownerId2 = 2;
+				try {
+					ownerId1 = accountCrudService.getAccountByAccountNum(targetAccountNumberTransferTo).getOwner_id();
+				} catch (BusinessException e) {
+
+				}
+				try {
+					ownerId2 = accountCrudService.getAccountByAccountNum(targetAccountNumberTransferFrom).getOwner_id();
+				} catch (BusinessException e) {
+
+				}
+				
+				if(ownerId1==ownerId2) isBothAccountBelongToUser = true;
+				
+				//if both account belongs to the same person, run the first service and finish the transaction
+				if(isBothAccountBelongToUser) {
+					try {
+						transactionCrudService.createTransferTransactionWhenBothAccountsBelongToTheSamePerson(
+								targetAccountNumberTransferTo, targetAccountNumberTransferFrom, transferAmount);
+					} catch (BusinessException e) {
+						log.info("Unable to complete the transfer. Please try again later.");
+					}
+				}else {
+					//if the second account belongs to someone else, create the transaction only
+					try {
+						transactionCrudService.createTransferTransactionToAnotherPerson(targetAccountNumberTransferTo, targetAccountNumberTransferFrom, transferAmount);
+					} catch (BusinessException e) {
+						log.info("Unable to complete the transfer. Please try again later.");
+					}
+				}
+				
+				
+				
+				
+			} while (!chFrom.equals("cancel"));
 			log.info("Going back to main menu.");
 			spaceOutTheOldMessages();
 		}else {
 			log.info("You don't have an account yet. You can apply for one using this app. Thank you!");
 		}
+	}
+
+	private static void printTheAccounts(List<Account> accountsBelongToCustomer) {
+		int index = 1;
+		for (Account a: accountsBelongToCustomer) {
+			
+			log.info(index+")	"+a.getPrintedAccountType()+" ("+a.getPrintedAccountStatus() +
+					")\n	Current balance: $"+df2.format(a.getCurrent_balance()));
+			index++;
+			
+			
+		}
+		
+	}
+
+	private static long acquireTargetAccountNumberTransterTo(Scanner sc, List<Account> accountsBelongToCustomer, String ch,
+			long targetAccountNumberTransferTo) {
+		
+		switch (ch) {
+		case "1":
+			if(accountsBelongToCustomer.size()>=1) {
+				targetAccountNumberTransferTo = accountsBelongToCustomer.get(0).getNumber();
+			}
+			break;
+		case "2":
+			if(accountsBelongToCustomer.size()>=2) {
+				targetAccountNumberTransferTo = accountsBelongToCustomer.get(1).getNumber();
+			}
+			break;
+		case "3":
+			if(accountsBelongToCustomer.size()>=3) {
+				targetAccountNumberTransferTo = accountsBelongToCustomer.get(2).getNumber();
+			}
+			break;
+		case "4":
+			if(accountsBelongToCustomer.size()>=4) {
+				targetAccountNumberTransferTo = accountsBelongToCustomer.get(3).getNumber();
+			}
+			break;
+		case "5":
+			//ask for the account number
+			log.info("Please enter the target account number to transfer to:");
+			long targetAccountNumberTransferToToBe = acquireUserLongInput(sc);
+			//Verify the account status of the target account
+			AccountCrudService service = new AccountCrudServiceImpl();
+			boolean isAnActiveAccount= false;
+			try {
+				isAnActiveAccount = service.checkIfanAccountIsActive(targetAccountNumberTransferTo);
+			} catch (BusinessException e) {
+				log.info("Unable to find the account.");
+				targetAccountNumberTransferTo = 0;
+			}
+			//set the targetAccountNumberTransferTo to the user input
+			if (isAnActiveAccount) {
+				targetAccountNumberTransferTo = targetAccountNumberTransferToToBe;
+			}
+			break;
+		default: 
+			if (!ch.equals("cancel")) {
+				log.info("The selection was invalid. Please retry.");
+				
+			}
+			break;
+		}
+		
+		
+		return targetAccountNumberTransferTo;
 	}
 	
 	private static List<Account> sortAccountsByType(List<Account> accountsBelongToCustomer) {
@@ -534,7 +712,7 @@ public class Main {
 			
 			printApplicableAccounts(customer);
 			
-			chaam = acquireUserInput(sc, chaam);
+			chaam = acquireUserIntInput(sc, chaam);
 			
 			switch (chaam) {
 			case 1:
@@ -665,7 +843,7 @@ public class Main {
 			log.info("1) Yes");
 			log.info("2) Give up the application and go back");
 				
-			ch = acquireUserInput(sc, ch);
+			ch = acquireUserIntInput(sc, ch);
 				
 			switch (ch) {
 			case 1:
@@ -865,7 +1043,7 @@ public class Main {
 			log.info("1) Yes");
 			log.info("2) No");
 			
-			ch = acquireUserInput(sc, ch);
+			ch = acquireUserIntInput(sc, ch);
 			switch (ch) {
 			case 1:
 				//currently working on...
@@ -927,7 +1105,7 @@ public class Main {
 			log.info("1) Yes");
 			log.info("2) No");
 			
-			ch = acquireUserInput(sc, ch);
+			ch = acquireUserIntInput(sc, ch);
 			switch (ch) {
 			case 1:
 				
@@ -1370,7 +1548,7 @@ public class Main {
 		} while (enteredUserName==null);
 	}
 	
- 	static void spaceOutTheOldMessages() {
+ 	public static void spaceOutTheOldMessages() {
 		//couple of lines
 		log.info("");
 		log.info("");

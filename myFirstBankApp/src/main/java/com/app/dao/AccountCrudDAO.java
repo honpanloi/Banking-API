@@ -10,7 +10,7 @@ public interface AccountCrudDAO {
 	
 	public int creatAccountByCustomer(Customer customer, Account account, Double initialDeposit) throws BusinessException;
 	public int creatAccountByEmployee(Account account, Double initialDeposit) throws BusinessException;
-	public Account getAccountByAccountNum() throws BusinessException;
+	public Account getAccountByAccountNum(long accountNumber) throws BusinessException;
 	public List<Account> getAccountsByCustomerId (long id) throws BusinessException;
 	public List<Account> getAccountsByCustomerIdAndUnapprovedStatus() throws BusinessException;
 	public int updateAccountWithApprovedStatus() throws BusinessException;
@@ -18,7 +18,6 @@ public interface AccountCrudDAO {
 	
 	public long getAccountByCustomerIdAndAccountType(long id, String accountType) throws BusinessException;
 	
-//	public int depositToAnAccountByCustomerAndAccountNumber(Customer customer, long accountNumber, double depositAmount) throws BusinessException;
 	
 	public boolean checkIfanAccountIsActive(long accountNumber) throws BusinessException;
 

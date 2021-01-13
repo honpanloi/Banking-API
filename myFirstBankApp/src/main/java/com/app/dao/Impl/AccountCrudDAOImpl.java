@@ -104,9 +104,40 @@ public class AccountCrudDAOImpl implements AccountCrudDAO {
 	}
 
 	@Override
-	public Account getAccountByAccountNum() throws BusinessException {
-		// TODO Auto-generated method stub
-		return null;
+	public Account getAccountByAccountNum(long accountNumber) throws BusinessException {
+		Account account = null;
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			
+			String sql = "select * from my_bank_app.account where \"number\" = ?";
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1,accountNumber);
+				
+			ResultSet resultSet = preparedStatement.executeQuery();
+				
+			if(resultSet.next()) {
+				account = new Account();
+				account.setNumber(accountNumber);
+				account.setOwner_id(resultSet.getLong("owner_id"));
+				account.setDate_created(resultSet.getString("date_created"));
+				account.setAccount_type(resultSet.getString("account_type"));
+				account.setCurrent_balance(resultSet.getDouble("current_balance"));
+				account.setRejected_by(resultSet.getLong("rejected_by"));
+				account.setStatus(resultSet.getString("status"));
+				account.setApproved_by(resultSet.getLong("approved_by"));
+			}
+				
+				
+			} catch (ClassNotFoundException e) {
+				log.info(e);
+				log.info("connection fail");
+			} catch (SQLException e) {
+				log.info(e);
+				log.info("sql command fail");
+			}
+			
+	
+		
+		return account;
 	}
 
 	@Override
@@ -120,7 +151,6 @@ public class AccountCrudDAOImpl implements AccountCrudDAO {
 		preparedStatement.setLong(1,id);
 			
 		ResultSet resultSet = preparedStatement.executeQuery();
-			
 			
 		while(resultSet.next()) {
 			Account account = new Account();
@@ -195,47 +225,6 @@ public class AccountCrudDAOImpl implements AccountCrudDAO {
 		
 		return tempAccount.getNumber();
 	}
-
-//	@Override
-//	public int depositToAnAccountByCustomerAndAccountNumber(Customer customer, long accountNumber, double depositAmount) throws BusinessException {
-//		int c = 0;
-//		try(Connection connection = PostgresqlConnection.getConnection()){
-//			
-//			
-//			//acquire current balance
-//			String sql = "select current_balance from my_bank_app.account where \"number\" = ?";
-//			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-//			ResultSet resultSet = preparedStatement.executeQuery();
-//			double currentBalance = 0;
-//			if(resultSet.next()) {
-//				currentBalance = resultSet.getDouble("current_balance");
-//				c+=1;
-//			}
-//			
-//			//get projected balance
-//			double projectedBalance = currentBalance + depositAmount;
-//			
-//			//update the current balance
-//			String sql1 = "update my_bank_app.account set current_balance = ? where \"number\" = ?";
-//			PreparedStatement preparedStatement1 = connection.prepareStatement(sql1);
-//			preparedStatement1.setDouble(1, projectedBalance);
-//			preparedStatement1.setLong(2, accountNumber);
-//			
-//			c += preparedStatement1.executeUpdate();
-//	
-//		
-//			
-//		} catch (ClassNotFoundException e) {
-//			log.info(e);
-//			log.info("connection fail");
-//			
-//			
-//		} catch (SQLException e) {
-//			log.info(e);
-//			log.info("sql command fail");
-//		}
-//		return c;
-//	}
 
 	@Override
 	public boolean checkIfanAccountIsActive(long accountNumber) throws BusinessException {

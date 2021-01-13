@@ -4,10 +4,10 @@ public class Account {
 	private long number;
 	private String account_type;
 	private String date_created;
-	private int owner_id;
+	private long owner_id;
 	private String status;
-	private int approved_by;
-	private int rejected_by;
+	private long approved_by;
+	private long rejected_by;
 	private double current_balance;
 	
 	public long getNumber() {
@@ -28,10 +28,10 @@ public class Account {
 	public void setDate_created(String date_created) {
 		this.date_created = date_created;
 	}
-	public int getOwner_id() {
+	public long getOwner_id() {
 		return owner_id;
 	}
-	public void setOwner_id(int owner_id) {
+	public void setOwner_id(long owner_id) {
 		this.owner_id = owner_id;
 	}
 	public String getStatus() {
@@ -40,16 +40,16 @@ public class Account {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	public int getApproved_by() {
+	public long getApproved_by() {
 		return approved_by;
 	}
-	public void setApproved_by(int approved_by) {
+	public void setApproved_by(long approved_by) {
 		this.approved_by = approved_by;
 	}
-	public int getRejected_by() {
+	public long getRejected_by() {
 		return rejected_by;
 	}
-	public void setRejected_by(int rejected_by) {
+	public void setRejected_by(long rejected_by) {
 		this.rejected_by = rejected_by;
 	}
 	public double getCurrent_balance() {
@@ -63,7 +63,7 @@ public class Account {
 		
 	}
 	
-	public Account(long number, String account_type, String date_created, int owner_id, String status, int approved_by,
+	public Account(long number, String account_type, String date_created, long owner_id, String status, int approved_by,
 			int rejected_by, double current_balance) {
 		super();
 		this.number = number;
