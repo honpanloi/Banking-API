@@ -155,7 +155,7 @@ public class Main {
 		//acquire employee
 		EmployeeLoginService employeeLoginService = new EmployeeLoginServiceImpl();
 		Employee employee = null;
-		System.out.println(userNameEntered+passwordEntered);
+		
 		try {
 			employee = employeeLoginService.loginEmployeeByUserNameAndPassword(userNameEntered, passwordEntered);
 		} catch (BusinessException e) {
@@ -170,89 +170,6 @@ public class Main {
 		log.info("Login Successful!");
 		employeeMainMenu(sc,employee);
 		
-	}
-
-	private static void employeeMainMenu(Scanner sc, Employee employee) {
-		log.info("Hello! "+employee.getName()+". How are you today?");
-		
-		
-		int chcmm = 0;
-		do {
-
-			log.info("-----Employee main menu-----");
-			log.info("Please choose an option below by entering the number associated with that option");
-			log.info("1) Register a customer");
-			log.info("2) Approve an account application");
-			log.info("3) Reject an account application");
-			log.info("4) View account Information");
-			log.info("5) View most recent tranactions");
-			log.info("6) Log out");
-			
-			chcmm = acquireUserIntInput(sc, chcmm);
-		
-			switch (chcmm) {
-		
-			case 1:		customerRegistrationByEmployee(employee, sc);
-				break;
-			case 2:		
-				break;
-			case 3:		
-				break;
-			case 4:		
-				break;
-			case 5:		
-				break;
-			case 6:		
-				break;
-	
-		default: printOptionNotAvailable(); break;
-		}
-		
-		} while (chcmm!=6);
-	}
-
-	private static void CustomerMainMenu(Scanner sc, Customer customer, CustomerCrudService customercrudServiceImpl) {
-		log.info("Hello! "+customer.getFirst_name()+". How can I help you today");
-		
-		int chcmm = 0;
-		do {
-			//log.info(customer.getBasic_checking_acc_id());
-			log.info("-----Main Menu----");
-			log.info("Please choose an option below by entering the number associated with that option");
-			log.info("1) Apply for a new bank account");
-			log.info("2) View account balance");
-			log.info("3) Deposit");
-			log.info("4) Withdraw");
-			log.info("5) Make a transfer");
-			log.info("6) Check incoming transfer");
-			log.info("7) Log out");
-			
-			chcmm = acquireUserIntInput(sc, chcmm);
-		
-			switch (chcmm) {
-		
-			case 1:		applyAccountMenu(sc,customer,customercrudServiceImpl);
-				break;
-			case 2:		viewAccountsBelongToTheCustomer(customer);
-				break;
-			case 3:		atmDepositMenu(sc, customer);
-				break;
-			case 4:		atmWithdrawMenu(sc, customer);
-				break;
-			case 5:		makeATransfer(sc, customer);
-				break;
-			case 6:		acceptTransferMenu(sc, customer);
-				break;
-			case 7:
-				log.info("Thank your for using our service!");
-				log.info("logging out...");
-				customer = null;
-				break;
-	
-		default: printOptionNotAvailable(); break;
-		}
-		
-		} while (chcmm!=7);
 	}
 
 	private static void loginCustomer(Scanner sc) {
@@ -310,6 +227,123 @@ public class Main {
 			}
 			
 		}
+	}
+
+	private static void employeeMainMenu(Scanner sc, Employee employee) {
+		AccountCrudService accountCrudService = new AccountCrudServiceImpl();
+		
+		log.info("Hello! "+employee.getName()+". How are you today?");
+		
+		
+		int chcmm = 0;
+		do {
+
+			log.info("-----Employee main menu-----");
+			log.info("Please choose an option below by entering the number associated with that option");
+			log.info("1) Register a customer");
+			log.info("2) Apply for an account for a customer");
+			log.info("3) Approve an account application");
+			log.info("4) Reject an account application");
+			log.info("5) View account Information");
+			log.info("6) View most recent tranactions");
+			log.info("7) Log out");
+			
+			chcmm = acquireUserIntInput(sc, chcmm);
+		
+			switch (chcmm) {
+		
+			case 1:		customerRegistrationByEmployee(employee, sc);
+				break;
+			case 2:		
+				break;
+			case 3:		
+				break;
+			case 4:		
+				
+				
+				
+				break;
+			case 5:		viewAnAccountInfoByAccountNumber(sc, accountCrudService);
+				break;
+			case 6:		
+				log.info("Login out...");
+				spaceOutTheOldMessages();
+				break;
+	
+		default: printOptionNotAvailable(); break;
+		}
+		
+		} while (chcmm!=7);
+	}
+
+	private static void viewAnAccountInfoByAccountNumber(Scanner sc, AccountCrudService accountCrudService) {
+		log.info("Please enter an account number to view the information.");
+		
+		
+		long accountNumber = 0;
+		do {
+			accountNumber = acquireUserLongInput(sc);
+		} while (accountNumber==0);
+		
+		
+		Account account = null;
+		try {
+			account = accountCrudService.getAccountByAccountNum(accountNumber);
+		} catch (BusinessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if(account==null) {
+			log.info("Unable to find an account with the number: "+accountNumber);
+			//return
+		}
+		
+		log.info(account.toString());
+	}
+
+	private static void CustomerMainMenu(Scanner sc, Customer customer, CustomerCrudService customercrudServiceImpl) {
+		log.info("Hello! "+customer.getFirst_name()+". How can I help you today");
+		
+		int chcmm = 0;
+		do {
+			//log.info(customer.getBasic_checking_acc_id());
+			log.info("-----Main Menu----");
+			log.info("Please choose an option below by entering the number associated with that option");
+			log.info("1) Apply for a new bank account");
+			log.info("2) View account balance");
+			log.info("3) Deposit");
+			log.info("4) Withdraw");
+			log.info("5) Make a transfer");
+			log.info("6) Check incoming transfer");
+			log.info("7) Log out");
+			
+			chcmm = acquireUserIntInput(sc, chcmm);
+		
+			switch (chcmm) {
+		
+			case 1:		applyAccountMenu(sc,customer,customercrudServiceImpl);
+				break;
+			case 2:		viewAccountsBelongToTheCustomer(customer);
+				break;
+			case 3:		atmDepositMenu(sc, customer);
+				break;
+			case 4:		atmWithdrawMenu(sc, customer);
+				break;
+			case 5:		makeATransfer(sc, customer);
+				break;
+			case 6:		acceptTransferMenu(sc, customer);
+				break;
+			case 7:
+				log.info("Thank your for using our service!");
+				log.info("logging out...");
+				customer = null;
+				break;
+	
+		default: printOptionNotAvailable(); break;
+		}
+		
+		} while (chcmm!=7);
 	}
 
 	private static void acceptTransferMenu(Scanner sc, Customer customer) {
@@ -1166,7 +1200,7 @@ public class Main {
 				log.info("Thank you for your interest of opening a "+accTypeFullName);
 				canBeApplied = true;
 			}else {
-				System.out.println("HI"+ customer.getPrem_saving_acc_id());
+				
 				log.info("You already have a Premium Saving or an ongoing application.");
 			}
 			break;

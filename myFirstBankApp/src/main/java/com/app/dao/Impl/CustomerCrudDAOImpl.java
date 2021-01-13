@@ -6,14 +6,20 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.apache.log4j.Logger;
+
 import com.app.dao.CustomerCrudDAO;
 import com.app.dao.dbutil.PostgresqlConnection;
 import com.app.exception.BusinessException;
+import com.app.main.Main;
 import com.app.model.Customer;
 import com.app.model.Employee;
 
+import jdk.internal.org.jline.utils.Log;
+
 public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 
+	private static Logger log = Logger.getLogger(Main.class);
 	@Override
 	public Customer getCustomerByLoginUserName(String login_user_name) throws BusinessException{
 		//This is supposed to only get the id number from the database
@@ -126,7 +132,7 @@ public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 			
 			ResultSet resultSet = preparedStatement.executeQuery();
 			if(resultSet.next()) {
-				throw new BusinessException("User name: "+userName+" is already taken.");
+				log.info("The user name is already taken.");
 			}else {
 				isTaken = false;
 			}
@@ -153,7 +159,7 @@ public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 			
 			ResultSet resultSet = preparedStatement.executeQuery();
 			if(resultSet.next()) {
-				throw new BusinessException("Social Security : "+ssn+" is already registered.");
+				log.info("This SSN has already been registered.");
 			}else {
 				isTaken = false;
 			}
@@ -200,7 +206,7 @@ public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 	public int creatNewCustomerByEmployee(Employee employee, Customer customer) throws BusinessException {
 		int c =0;
 		try(Connection connection = PostgresqlConnection.getConnection()){
-			String sql = "insert into my_bank_app.customer(salutation,dob,address,phone1,phone2,email,login_user_name,login_password,credit_score,ssn) values (?,?,?,?,?,?,?,?,?,?)";
+			String sql = "insert into my_bank_app.customer(salutation,dob,address,phone1,phone2,email,credit_score,ssn,first_name,last_name) values (?,?,?,?,?,?,?,?,?,?)";
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			
 			preparedStatement.setString(1, customer.getSalutation());
@@ -209,10 +215,10 @@ public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 			preparedStatement.setLong(4, customer.getPhone1());
 			preparedStatement.setLong(5, customer.getPhone2());
 			preparedStatement.setString(6, customer.getEmail());
-			preparedStatement.setString(7, customer.getLogin_user_name());
-			preparedStatement.setString(8, customer.getLogin_password());
-			preparedStatement.setInt(9, customer.getCredit_score());
-			preparedStatement.setInt(10, customer.getSsn());
+			preparedStatement.setInt(7, customer.getCredit_score());
+			preparedStatement.setInt(8, customer.getSsn());
+			preparedStatement.setString(9, customer.getFirst_name());
+			preparedStatement.setString(10, customer.getLast_name());
 			
 			c = preparedStatement.executeUpdate();
 			

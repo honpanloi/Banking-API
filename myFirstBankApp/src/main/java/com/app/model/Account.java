@@ -138,4 +138,43 @@ public class Account {
 		return result;
 	}
 	
+	
+	public boolean equals(Account a) {
+		boolean b = true;
+		
+		if(!(this.account_type.toString().equals(a.account_type.toString()))) {
+			System.out.println(1);
+			return false;
+		}
+		if(!(this.approved_by==a.approved_by)) {
+			System.out.println(1);
+			return false;
+		}
+		if(!(this.current_balance==a.current_balance)) {
+			System.out.println(1);
+			return false;
+		}
+		if(!(this.date_created.toString().equals(a.date_created.toString()))) {
+			System.out.println(1);
+			return false;
+		}
+		if(!(this.number==a.number)) {
+			System.out.println(1);
+			return false;
+		}
+		if(!(this.owner_id==a.owner_id)) {
+			System.out.println(1);
+			return false;
+		}
+		if(!(this.rejected_by==a.rejected_by)) {
+			System.out.println(1);
+			return false;
+		}
+		if(!(this.status.toString().equals(a.status.toString()))) {
+			System.out.println(1);
+			return false;
+		}
+		return b;
+	}
+	
 }

@@ -43,7 +43,7 @@ public class CustomerCrudServiceImpl implements CustomerCrudService {
 	public Customer getCustomerById(long id) throws BusinessException {
 		Customer customer = null;
 		if(id>=10000) {
-			customerCrudDAOdao.getCustomerById(id);
+			customer = customerCrudDAOdao.getCustomerById(id);
 		}
 		return customer;
 	}
