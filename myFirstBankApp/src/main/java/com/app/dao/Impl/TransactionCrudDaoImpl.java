@@ -619,4 +619,47 @@ public class TransactionCrudDaoImpl implements TransactionCrudDao {
 		return transcation;
 	}
 
+	@Override
+	public List<Transaction> getThe30MostRecentTransactions() throws BusinessException {
+		List<Transaction> result = null;
+		
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			
+			String sql = "select * from my_bank_app.\"transaction\" order by trans_number desc limit 30";
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			result = new ArrayList<Transaction>();
+			while(resultSet.next()) {
+				Transaction transaction = new Transaction();
+				transaction.setAmount(resultSet.getDouble("amount"));
+				transaction.setBalance_after_deposit(resultSet.getDouble("balance_after_deposit"));
+				transaction.setBalance_after_withdraw(resultSet.getDouble("balance_after_withdraw"));
+				transaction.setDeposit_to(resultSet.getLong("deposit_to"));
+				transaction.setInitiator_acc(resultSet.getLong("initiator_acc"));
+				transaction.setStatus(resultSet.getString("status"));
+				transaction.setTime_completed(resultSet.getString("time_completed"));
+				transaction.setTime_requested(resultSet.getString("time_requested"));
+				transaction.setTrans_number(resultSet.getLong("trans_number"));
+				transaction.setType(resultSet.getString("type"));
+				transaction.setWithdraw_from(resultSet.getLong("withdraw_from"));
+				
+				result.add(transaction);
+				try {
+					Thread.sleep(20);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+		} catch (ClassNotFoundException e) {
+			log.info(e);
+			log.info("connection fail");
+		} catch (SQLException e) {
+			log.info(e);
+			log.info("sql command fail");
+		}
+		return result;
+	}
+
 }

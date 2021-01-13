@@ -14,5 +14,5 @@ public interface TransactionCrudService {
 	public List<Transaction> searchForIncomingTransactions(long depositToAccountNum)throws BusinessException;
 	public int acceptAnIncomingTransfer(long trasactionNum)throws BusinessException;
 	
-	
+	public List<Transaction> getThe30MostRecentTransactions() throws BusinessException;
 }

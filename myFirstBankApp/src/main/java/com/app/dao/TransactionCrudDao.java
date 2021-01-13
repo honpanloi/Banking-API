@@ -14,4 +14,6 @@ public interface TransactionCrudDao {
 	public List<Transaction> searchForIncomingTransactions(long depositToAccountNum)throws BusinessException;
 	public int acceptAnIncomingTransfer(long trasactionNum)throws BusinessException;
 	public Transaction getTranscationById(long trasactionNum)throws BusinessException;
+	
+	public List<Transaction> getThe30MostRecentTransactions() throws BusinessException;
 }

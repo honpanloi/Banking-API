@@ -58,5 +58,11 @@ public class TransactionCrudServiceImpl implements TransactionCrudService {
 		transactionCrudDao.acceptAnIncomingTransfer(trasactionNum);
 		return c;
 	}
+	@Override
+	public List<Transaction> getThe30MostRecentTransactions() throws BusinessException {
+		List<Transaction> list = null;
+		list = transactionCrudDao.getThe30MostRecentTransactions();
+		return list;
+	}
 
 }

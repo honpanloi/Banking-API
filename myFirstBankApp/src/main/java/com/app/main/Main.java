@@ -245,7 +245,7 @@ public class Main {
 			log.info("3) Approve an account application");
 			log.info("4) Reject an account application");
 			log.info("5) View account Information");
-			log.info("6) View most recent tranactions");
+			log.info("6) View most recent tranactions(30)");
 			log.info("7) Log out");
 			
 			chcmm = acquireUserIntInput(sc, chcmm);
@@ -264,16 +264,21 @@ public class Main {
 				//show the credit score requirement of that account type
 				//select which account to approve
 				//refresh the list and select again
-				//
 				break;
 			case 4:		
-				
+				//get a customer id
+				//search for a unproved account
+				//select which account to reject
+				//refresh the list and select again
 				
 				
 				break;
 			case 5:		viewAnAccountInfoByAccountNumber(sc, accountCrudService);
 				break;
 			case 6:		
+						view30mostRecentTransaction();
+				break;
+			case 7:		
 				log.info("Login out...");
 				spaceOutTheOldMessages();
 				break;
@@ -282,6 +287,21 @@ public class Main {
 		}
 		
 		} while (chcmm!=7);
+	}
+
+	private static void view30mostRecentTransaction() {
+		log.info("Here is the 30 most recent transactions.");
+		TransactionCrudService transactionCrudService = new TransactionCrudServiceImpl();
+		List<Transaction> list = new ArrayList<Transaction>();
+		try {
+			list = transactionCrudService.getThe30MostRecentTransactions();
+		} catch (BusinessException e) {
+			log.info("Unable to retrieve transaction history.");
+		}
+		
+		for (Transaction t : list) {
+			log.info(t.toString());
+		}
 	}
 
 	private static void applyAccountByEmployee(Scanner sc, Employee employee) {
