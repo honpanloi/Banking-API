@@ -160,9 +160,9 @@ public class Customer {
 	public String toString() {
 		return "Customer [id=" + id + ", first_name=" + first_name + ", last_name=" + last_name + ", salutation="
 				+ salutation + ", ssn=" + ssn + ", dob=" + dob + ", address=" + address + ", phone1=" + phone1
-				+ ", phone2=" + phone2 + ", email=" + email + ", basic_checking_acc_id=" + basic_checking_acc_id
+				+ ", phone2=" + phone2 + ", email=" + email + ",\n basic_checking_acc_id=" + basic_checking_acc_id
 				+ ", basic_saving_acc_id=" + basic_saving_acc_id + ", prem_checking_acc_id=" + prem_checking_acc_id
-				+ ", prem_saving_acc_id=" + prem_saving_acc_id + ", login_user_name=" + login_user_name
+				+ ", prem_saving_acc_id=" + prem_saving_acc_id + ",\n login_user_name=" + login_user_name
 				+ ", login_password=" + login_password + ", credit_score=" + credit_score + "]";
 	}
 	

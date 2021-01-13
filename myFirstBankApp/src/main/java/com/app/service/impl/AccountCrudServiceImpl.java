@@ -81,4 +81,20 @@ public class AccountCrudServiceImpl implements AccountCrudService {
 		return b;
 	}
 
+	@Override
+	public long searchForTheMostRecentAccountApplication() throws BusinessException {
+		long c = 0;
+		 c = accountCrudDAO.searchForTheMostRecentAccountApplication();
+		return c;
+	}
+
+	@Override
+	public int approveOrRejectAnApplication(long accountNumber, boolean isApprove) throws BusinessException {
+		int c = 0;
+		 c = accountCrudDAO.approveOrRejectAnApplication(accountNumber, isApprove);
+		return c;
+	}
+
+	
+
 }

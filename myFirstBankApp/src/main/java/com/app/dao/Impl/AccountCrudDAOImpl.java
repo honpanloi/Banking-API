@@ -259,4 +259,60 @@ public class AccountCrudDAOImpl implements AccountCrudDAO {
 		return b;
 	}
 
+	@Override
+	public long searchForTheMostRecentAccountApplication() throws BusinessException {
+		long c =0;
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			
+			String sql = "select \"number\" from my_bank_app.account where \"status\" = 'not_yet_approved' order by \"number\" desc limit 1";
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			if(resultSet.next()) {
+				c = resultSet.getLong("number");
+			}else {
+				log.info("There is no more unapproved account.");
+			}
+			
+		} catch (ClassNotFoundException | SQLException e) {
+			log.info("Unable to find a unapproved acc.");
+		}
+		return c;
+	}
+
+	@Override
+	public int approveOrRejectAnApplication(long accountNumber, boolean isApprove) throws BusinessException {
+		int c = 0;
+		
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			
+		String sql = "";
+		
+		if(isApprove) {
+			sql = "update my_bank_app.account set \"status\" = 'active' where \"number\" = ?";
+		}else {
+			sql = "update my_bank_app.account set \"status\" = 'rejected' where \"number\" = ?";
+		}
+		
+		PreparedStatement preparedStatement = connection.prepareStatement(sql);
+		preparedStatement.setLong(1, accountNumber);
+		
+		c += preparedStatement.executeUpdate();
+		
+		if(isApprove) {
+			log.info("Account proved. A notification has sent.");
+			Main.spaceOutTheOldMessages();
+		}else {
+			log.info("Account Rejected. A notification has sent.");
+			Main.spaceOutTheOldMessages();
+		}
+		
+		}catch (ClassNotFoundException | SQLException e) {
+			log.info("Unable to update the account status.");
+		}
+		
+		return c;
+	}
+
 }

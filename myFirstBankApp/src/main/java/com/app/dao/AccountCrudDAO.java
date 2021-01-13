@@ -21,4 +21,6 @@ public interface AccountCrudDAO {
 	
 	public boolean checkIfanAccountIsActive(long accountNumber) throws BusinessException;
 
+	public long searchForTheMostRecentAccountApplication()throws BusinessException;
+	public int approveOrRejectAnApplication(long accountNumber, boolean isApprove)throws BusinessException;
 }

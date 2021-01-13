@@ -16,4 +16,6 @@ public interface CustomerCrudDAO {
 	public int creatNewCustomerByCustomer(Customer customer) throws BusinessException;
 	public int creatNewCustomerByEmployee(Employee employee, Customer customer) throws BusinessException;
 
+	public long searchForTheMostRecentAccountApplication()throws BusinessException;
+	public int rejectTheMostRecentAccountApplication()throws BusinessException;
 }

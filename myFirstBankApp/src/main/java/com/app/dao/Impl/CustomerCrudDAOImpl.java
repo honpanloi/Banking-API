@@ -82,7 +82,7 @@ public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 	public Customer getCustomerById(long id) throws BusinessException {
 		Customer customer = new Customer();
 		try(Connection connection = PostgresqlConnection.getConnection()){
-			String sql = "select first_name, last_name, dob, address, phone1, phone2, email, basic_checking_acc_id, basic_saving_acc_id, prem_checking_acc_id, prem_saving_acc_id from my_bank_app.customer where id = ?";
+			String sql = "select first_name, last_name, dob, address, phone1, phone2, email, basic_checking_acc_id, basic_saving_acc_id, prem_checking_acc_id, prem_saving_acc_id, credit_score from my_bank_app.customer where id = ?";
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setLong(1,id);
 			
@@ -102,7 +102,7 @@ public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 				customer.setBasic_saving_acc_id(resultSet.getLong("basic_saving_acc_id"));
 				customer.setPrem_checking_acc_id(resultSet.getLong("prem_checking_acc_id"));
 				customer.setPrem_saving_acc_id(resultSet.getLong("prem_saving_acc_id"));
-
+				customer.setCredit_score(resultSet.getInt("credit_score"));
 				
 				
 				
@@ -220,12 +220,40 @@ public class CustomerCrudDAOImpl implements CustomerCrudDAO{
 			preparedStatement.setString(9, customer.getFirst_name());
 			preparedStatement.setString(10, customer.getLast_name());
 			
-			c = preparedStatement.executeUpdate();
+			c += preparedStatement.executeUpdate();
 			
 		} catch (ClassNotFoundException | SQLException e) {
 			throw new BusinessException("Registration failed. Internal error occured contact sysadmin");
 		}
 		return c;
+	}
+
+	@Override
+	public long searchForTheMostRecentAccountApplication() throws BusinessException {
+		long c =0;
+		try(Connection connection = PostgresqlConnection.getConnection()){
+			
+			String sql = "select \"number\" from my_bank_app.account order by \"number\" desc limit 1";
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			if(resultSet.next()) {
+				c = resultSet.getLong("number");
+			}else {
+				log.info("There is no more unapproved account.");
+			}
+			
+		} catch (ClassNotFoundException | SQLException e) {
+			log.info("Unable to find a unapproved acc.");
+		}
+		return c;
+	}
+
+	@Override
+	public int rejectTheMostRecentAccountApplication() throws BusinessException {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }
