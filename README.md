@@ -24,6 +24,7 @@ The Banking API will manage the bank accounts of its users. It will be managed b
 * Spring Tool Suite - 4.8.1.Release
 * Dbeaver - 7.3.4
 * Git Bash - 2.25.1
+* Language used - Java 8, SQL, XML
 
 ## User Stroies / Features
 * As a user, I can login. 
