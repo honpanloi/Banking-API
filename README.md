@@ -17,7 +17,7 @@ The Banking API will manage the bank accounts of its users. It will be managed b
 ## Technologies Used
 * Maven - 2.22.1
 * Log4j - 1.2.17
-* Postgresql - 42.2.5
+* PostgreSQL - 42.2.5
 * Junit - 5.4.2
 * Mokito - 3.7.7
 * Java - 8
@@ -43,23 +43,25 @@ The Banking API will manage the bank accounts of its users. It will be managed b
 * An employee, I can view a log of all transactions.
 
 ## Getting Started
-1. Download and install development tools (Spring Tool Suite, Dbeaver, Gitbash)
-2. 
-  
-(include git clone command)
-(include all environment setup steps)
-
-> Be sure to include BOTH Windows and Unix command  
-> Be sure to mention if the commands only work on a specific platform (eg. AWS, GCP)
-
-- All the `code` required to get started
-- Images of what it should look like
-
+1. Download and install development tools. (Spring Tool Suite, Dbeaver, Gitbash)
+2. Open Git bash on the location that you want your project folder to be.
+3. In the Git bash CLI, enter the command 'git clone https://github.com/honpanloi/Banking-API.git'.
+4. You should see the project folder is created on your computer.
+5. Open Dbeaver.
+6. Create a new connection with local client PostgreSQL 12.
+7. Right Click on the 'puplic' schema. -> Tools -> Restore.
+8. Select the backup file at Banking-API/dump-postgres-202103261724.sql.
+9. Click on local client and select PostgreSQL 12.
+10. Click 'start'.
+11. A schema with some dummy data should be created
+12. Open Spring Tool Suite with the workspace of your choice.
+13. File -> Import -> Maven -> Existing Maven Projects.
+14. Navigate to the folder Banking-API where the pom.xml is located and click finish.
+15. You should see a project named 'com.myCarDealer' get imported.
+16. Right click on the project -> Run as -> Java application.
+17. You can now use the app with the console.
+ 
 ## Usage
+* After you successfully have the project running in Spring Tool Suit console, it should be very intuitive on how to use the app. You can create a new user following the instruction it gives you. You can start creating users and login with the users you created! After you loged in, you can apply for differet accounts.
 
-> Here, you instruct other people on how to use your project after they’ve installed it. This would also be a good place to include screenshots of your project in action.
-
-## License
-
-This project uses the following license: [<license_name>](<link>).
 
