@@ -62,6 +62,6 @@ The Banking API will manage the bank accounts of its users. It will be managed b
 17. You can now use the app with the console.
  
 ## Usage
-* After you successfully have the project running in Spring Tool Suit console, it should be very intuitive on how to use the app. You can create a new user following the instruction it gives you. You can start creating users and login with the users you created! After you loged in, you can apply for differet accounts.
+* After you successfully have the project running in Spring Tool Suit console, it should be very intuitive on how to use the app. You can create a new user following the instruction it gives you. You can start creating users and login with the users you created! After you loged in as a customer, you can apply for differet accounts. If you loged in as a employee, you can manage account applications as well as customer registration.
 
 
