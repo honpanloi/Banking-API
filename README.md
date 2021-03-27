@@ -50,17 +50,18 @@ The Banking API will manage the bank accounts of its users. It will be managed b
 4. You should see the project folder is created on your computer.
 5. Open Dbeaver.
 6. Create a new connection with local client PostgreSQL 12.
-7. Right Click on the 'puplic' schema. -> Tools -> Restore.
-8. Select the backup file at Banking-API/dump-postgres-202103261724.sql.
-9. Click on local client and select PostgreSQL 12.
-10. Click 'start'.
-11. A schema with some dummy data should be created
-12. Open Spring Tool Suite with the workspace of your choice.
-13. File -> Import -> Maven -> Existing Maven Projects.
-14. Navigate to the folder Banking-API where the pom.xml is located and click finish.
-15. You should see a project named 'com.myCarDealer' get imported.
-16. Right click on the project -> Run as -> Java application.
-17. You can now use the app with the console.
+7. Create a new schema under that connection called 'my_bank_app'
+8. Right Click on the 'my_bank_app' schema. -> Tools -> Restore.
+9. Select the backup file at myFirstBankApp/dump-postgres-202103261724.sql.
+10. Click on local client and select PostgreSQL 12.
+11. Click 'start'.
+12. A schema with some dummy data should be created
+13. Open Spring Tool Suite with the workspace of your choice.
+14. File -> Import -> Maven -> Existing Maven Projects.
+15. Navigate to the folder Banking-API where the pom.xml is located and click finish.
+16. You should see a project named 'com.myCarDealer' get imported.
+17. Right click on the project -> Run as -> Java application.
+18. You can now use the app with the console.
  
 ## Usage
 * After you successfully have the project running in Spring Tool Suit console, it should be very intuitive on how to use the app. You can create a new user following the instruction it gives you. You can start creating users and login with the users you created! After you loged in as a customer, you can apply for differet accounts. If you loged in as a employee, you can manage account applications as well as customer registration.
