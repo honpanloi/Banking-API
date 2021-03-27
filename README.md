@@ -68,4 +68,4 @@ The Banking API will manage the bank accounts of its users. It will be managed b
 
 
 ## License Information
-* Open-source. Not for commercial use.
+* Open-source. For demo purposes. Not for commercial use.
